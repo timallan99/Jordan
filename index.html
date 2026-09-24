@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Newcastle 1v1 Penalty Shootout vs Man Utd</title>
+    <!-- Tailwind CSS for responsive utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-page: #0b1120;
+            --text-page: #f8fafc;
+            --panel-bg: rgba(15, 23, 42, 0.95);
+            --border-ui: #334155;
+            --grass-light: #22c55e;
+            --grass-dark: #16a34a;
+            --grass-stripe: #15803d;
+            --zone-bg: rgba(255, 255, 255, 0.24);
+            --zone-border: #facc15;
+            --zone-text: #ffffff;
+        }
+
+        body.light-theme {
+            --bg-page: #f8fafc;
+            --text-page: #0f172a;
+            --panel-bg: rgba(255, 255, 255, 0.96);
+            --border-ui: #cbd5e1;
+            --grass-light: #4ade80;
+            --grass-dark: #22c55e;
+            --grass-stripe: #16a34a;
+            --zone-bg: rgba(255, 255, 255, 0.45);
+            --zone-border: #0284c7;
+            --zone-text: #0f172a;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-page);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+
+        /* 3D Stadium & Pitch Container */
+        .stadium-arena {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 120px);
+            min-height: 520px;
+            perspective: 900px;
+            overflow: hidden;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 35%, #0b1120 100%);
+        }
+
+        body.light-theme .stadium-arena {
+            background: linear-gradient(180deg, #bae6fd 0%, #e2e8f0 40%, #cbd5e1 100%);
+        }
+
+        /* 3D Tilted Pitch with Authentic Turf Stripes */
+        .pitch-field {
+            position: absolute;
+            bottom: -6%;
+            left: -20%;
+            width: 140%;
+            height: 86%;
+            background: repeating-linear-gradient(
+                0deg,
+                var(--grass-light) 0px,
+                var(--grass-light) 45px,
+                var(--grass-dark) 45px,
+                var(--grass-dark) 90px
+            );
+            transform: rotateX(48deg);
+            transform-origin: bottom center;
+            border-top: 6px solid rgba(255, 255, 255, 0.95);
+            box-shadow: inset 0 20px 60px rgba(0, 0, 0, 0.45);
+        }
+
+        .pitch-penalty-box {
+            position: absolute;
+            top: 0;
+            left: 20%;
+            width: 60%;
+            height: 75%;
+            border: 5px solid rgba(255, 255, 255, 0.88);
+            border-top: none;
+            pointer-events: none;
+        }
+
+        .pitch-six-yard {
+            position: absolute;
+            top: 0;
+            left: 32%;
+            width: 36%;
+            height: 35%;
+            border: 4px solid rgba(255, 255, 255, 0.88);
+            border-top: none;
+            pointer-events: none;
+        }
+
+        .pitch-penalty-arc {
+            position: absolute;
+            bottom: 12%;
+            left: 38%;
+            width: 24%;
+            height: 25%;
+            border: 4px solid rgba(255, 255, 255, 0.88);
+            border-radius: 50%;
+            pointer-events: none;
+            clip-path: inset(50% 0 0 0);
+        }
+
+        /* Penalty Spot */
+        .penalty-spot {
+            position: absolute;
+            bottom: 22%;
+            left: 50%;
+            width: 26px;
+            height: 26px;
+            background: #ffffff;
+            border-radius: 50%;
+            transform: translate(-50%, 50%);
+            box-shadow: 0 0 14px rgba(255, 255, 255, 0.85), 0 4px 8px rgba(0, 0, 0, 0.6);
+            z-index: 10;
+        }
+
+        .goal-stage {
+            position: absolute;
+            top: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 92%;
+            max-width: 680px;
+            height: 290px;
+            z-index: 20;
+        }
+
+        .goal-frame {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5);
+        }
+
+        /* Accessible Target Zones Grid Layer positioned OVER the goal mouth */
+        .target-zones-grid {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            right: 14px;
+            bottom: 14px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 12px;
+            z-index: 35;
+        }
+
+        /* High-contrast accessible target zone buttons */
+        .target-btn {
+            position: relative;
+            background: var(--zone-bg);
+            border: 3.5px dashed var(--zone-border);
+            border-radius: 14px;
+            color: var(--zone-text);
+            font-weight: 900;
+            font-size: 1.15rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(3px);
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.85);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.25);
+            padding: 6px;
+        }
+
+        .target-btn:hover, .target-btn:focus-visible {
+            background: rgba(250, 204, 21, 0.48);
+            border-color: #ffffff;
+            color: #ffffff;
+            transform: scale(1.04);
+            box-shadow: 0 0 25px rgba(250, 204, 21, 0.85), inset 0 0 20px rgba(255,255,255,0.4);
+            outline: 4px solid #38bdf8;
+            outline-offset: 2px;
+        }
+
+        .target-btn:active {
+            transform: scale(0.97);
+            background: rgba(234, 179, 8, 0.75);
+        }
+
+        .target-tl { grid-column: 1; grid-row: 1; }
+        .target-tr { grid-column: 3; grid-row: 1; }
+        .target-c  { grid-column: 2; grid-row: 1 / span 2; }
+        .target-bl { grid-column: 1; grid-row: 2; }
+        .target-br { grid-column: 3; grid-row: 2; }
+
+        .goalkeeper-actor {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            width: 140px;
+            height: 190px;
+            transform: translateX(-50%) translate3d(0, 0, 0);
+            transform-origin: bottom center;
+            z-index: 25;
+            transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 14px 10px rgba(0, 0, 0, 0.65));
+            pointer-events: none;
+        }
+
+        /* 3D Soccer Ball Actor Container */
+        .football-actor {
+            position: absolute;
+            bottom: 22%;
+            left: 50%;
+            width: 76px;
+            height: 76px;
+            transform: translate(-50%, 50%) scale(1);
+            z-index: 45;
+            transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.25, 1),
+                        left 0.55s cubic-bezier(0.2, 0.8, 0.25, 1),
+                        bottom 0.55s cubic-bezier(0.2, 0.8, 0.25, 1);
+            pointer-events: none;
+            filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.4));
+        }
+
+        /* Pure Inner Rotation for the 3D Ball (Eliminates trajectory jump distortion) */
+        .football-inner-spinner {
+            width: 100%;
+            height: 100%;
+            transform-origin: center center;
+        }
+
+        @keyframes ballRollSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(720deg); }
+        }
+
+        .spinning-ball {
+            animation: ballRollSpin 0.55s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+        }
+
+        /* Realistic Soft Grass Contact Shadow */
+        .football-shadow {
+            position: absolute;
+            bottom: 21%;
+            left: 50%;
+            width: 74px;
+            height: 22px;
+            background: radial-gradient(ellipse at center, rgba(5, 25, 10, 0.8) 0%, rgba(5, 25, 10, 0.45) 50%, rgba(0,0,0,0) 75%);
+            border-radius: 50%;
+            transform: translate(-50%, 50%) scale(1);
+            z-index: 40;
+            transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.25, 1),
+                        left 0.55s cubic-bezier(0.2, 0.8, 0.25, 1),
+                        bottom 0.55s cubic-bezier(0.2, 0.8, 0.25, 1),
+                        opacity 0.55s ease-out;
+            pointer-events: none;
+        }
+
+        /* Newcastle Black and White Stripes Pattern */
+        .toon-stripes {
+            background: repeating-linear-gradient(
+                90deg,
+                #000000,
+                #000000 16px,
+                #ffffff 16px,
+                #ffffff 32px
+            );
+        }
+
+        /* Celebration Confetti Overlay */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between select-none">
+    <canvas id="confetti-canvas"></canvas>
+
+    <header class="w-full bg-slate-900 border-b-4 border-black text-white px-3 py-2 sm:px-6 shadow-xl z-50">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            
+            <!-- Teams & Match Scoreboard -->
+            <div class="flex items-center gap-2 sm:gap-4 flex-wrap">
+                <!-- Newcastle United Badge & Score -->
+                <div class="flex items-center bg-black rounded-xl p-1.5 sm:px-4 sm:py-2 border-2 border-slate-700 shadow-md">
+                    <div class="w-9 h-9 rounded-lg toon-stripes border-2 border-amber-400 mr-2 flex items-center justify-center shadow-inner">
+                        <span class="text-xs font-black bg-black/85 text-amber-300 px-0.5 rounded">NUFC</span>
+                    </div>
+                    <div>
+                        <div class="text-xs uppercase font-extrabold text-amber-400 tracking-wider">NEWCASTLE</div>
+                        <div class="text-xl sm:text-2xl font-black text-white leading-tight">
+                            GOALS: <span id="val-score-newcastle" class="text-green-400 text-2xl sm:text-3xl ml-1">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-xl font-black text-amber-400 px-1 hidden md:block">VS</div>
+
+                <!-- Manchester United Goalkeeper Opponent -->
+                <div class="flex items-center bg-red-900/90 rounded-xl p-1.5 sm:px-4 sm:py-2 border-2 border-red-600 shadow-md">
+                    <div class="w-9 h-9 rounded-lg bg-red-600 border-2 border-white mr-2 flex items-center justify-center font-black text-white text-xs shadow-inner">
+                        MUFC
+                    </div>
+                    <div>
+                        <div class="text-xs uppercase font-extrabold text-red-200 tracking-wider">MAN UTD KEEPER</div>
+                        <div class="text-xl sm:text-2xl font-black text-white leading-tight">
+                            SAVES: <span id="val-score-manutd" class="text-yellow-300 text-2xl sm:text-3xl ml-1">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Kicks Taken -->
+                <div class="bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 hidden lg:flex flex-col justify-center">
+                    <span class="text-xs font-bold text-slate-300">TOTAL KICKS</span>
+                    <span id="val-kicks-total" class="text-xl font-black text-cyan-400">0</span>
+                </div>
+            </div>
+
+            <!-- Accessibility & Control Suite -->
+            <div class="flex items-center gap-2 flex-wrap ml-auto">
+                <!-- Difficulty Selector -->
+                <div class="flex items-center bg-slate-800 text-white px-2.5 py-1.5 rounded-xl border border-slate-700">
+                    <label for="select-difficulty" class="text-xs sm:text-sm font-bold mr-1.5 text-amber-300 flex items-center gap-1">
+                        <span>⚡</span>
+                        <span class="hidden sm:inline">Keeper:</span>
+                    </label>
+                    <select id="select-difficulty" class="bg-slate-900 text-white text-xs sm:text-sm font-extrabold rounded-lg px-2 py-1 outline-none border border-slate-600 cursor-pointer focus:ring-2 focus:ring-amber-400">
+                        <option value="easy" selected>Easy (~90% Goals)</option>
+                        <option value="medium">Medium (~65% Goals)</option>
+                        <option value="hard">Hard (Pro Goalie)</option>
+                    </select>
+                </div>
+
+                <!-- Sound Audio Toggle -->
+                <button id="btn-toggle-sound" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl border border-slate-700 flex items-center gap-1 text-sm shadow transition active:scale-95 focus:ring-2 focus:ring-amber-400" aria-label="Toggle Sound Effects">
+                    <span id="sound-icon">🔊</span>
+                    <span class="hidden sm:inline text-xs font-black">Sound</span>
+                </button>
+
+                <!-- Light/Dark Mode -->
+                <button id="btn-toggle-theme" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl border border-slate-700 flex items-center gap-1 text-sm shadow transition active:scale-95 focus:ring-2 focus:ring-amber-400" aria-label="Toggle Light or Dark Mode">
+                    <span id="theme-icon">🌙</span>
+                    <span class="hidden sm:inline text-xs font-black">Mode</span>
+                </button>
+
+                <!-- Fullscreen Toggle -->
+                <button id="btn-toggle-fullscreen" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow flex items-center gap-1 text-sm transition active:scale-95 focus:ring-2 focus:ring-indigo-300" aria-label="Toggle Fullscreen View">
+                    <span>⛶</span>
+                    <span class="hidden sm:inline text-xs font-black">Full Screen</span>
+                </button>
+
+                <!-- Download Game HTML file for GitHub hosting -->
+                <button id="btn-download-file" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow flex items-center gap-1 text-sm transition active:scale-95 focus:ring-2 focus:ring-emerald-300" title="Save this game file directly to your device for GitHub hosting">
+                    <span>📥</span>
+                    <span class="hidden sm:inline text-xs font-black">Download Game</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="w-full bg-black/90 py-1.5 px-4 text-center border-b border-amber-500/50 flex justify-center items-center gap-3 overflow-hidden shadow-inner">
+        <span class="toon-stripes w-8 h-4 rounded border border-white"></span>
+        <span id="banner-text" class="text-sm sm:text-base font-black tracking-widest text-amber-300 uppercase animate-pulse">
+            ★ ST JAMES' PARK: TAP ANY ZONE ON THE GOAL TO SHOOT! ★
+        </span>
+        <span class="toon-stripes w-8 h-4 rounded border border-white"></span>
+    </div>
+
+    <main class="stadium-arena flex-1 flex flex-col items-center justify-between" id="arena-container">
+        
+        <!-- Background St. James' Park Stands Skyline -->
+        <div class="absolute top-0 left-0 w-full h-40 opacity-30 pointer-events-none flex justify-around items-start pt-2">
+            <div class="text-white/60 font-black text-xl tracking-widest">HOWAY THE LADS</div>
+            <div class="text-white/60 font-black text-xl tracking-widest hidden md:block">SHEARER 9 • GINOLA 14</div>
+            <div class="text-white/60 font-black text-xl tracking-widest">THE GALLOWGATE END</div>
+        </div>
+
+        <!-- 3D Perspective Pitch -->
+        <div class="pitch-field">
+            <div class="pitch-penalty-box"></div>
+            <div class="pitch-six-yard"></div>
+            <div class="pitch-penalty-arc"></div>
+        </div>
+
+        <!-- The Penalty Spot on the turf -->
+        <div class="penalty-spot" id="penalty-spot"></div>
+
+        <div class="goal-stage" id="goal-stage">
+            
+            <!-- SVG Goal Frame with 3D depth and netting -->
+            <div class="goal-frame">
+                <svg class="w-full h-full" viewBox="0 0 600 300" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- Hexagonal Soccer Net Mesh Pattern -->
+                        <pattern id="net-mesh" width="14" height="14" patternUnits="userSpaceOnUse">
+                            <path d="M 0 7 L 7 0 L 14 7 L 7 14 Z" fill="none" stroke="rgba(255, 255, 255, 0.45)" stroke-width="1.3" />
+                            <path d="M 0 0 L 14 14 M 14 0 L 0 14" stroke="rgba(255, 255, 255, 0.2)" stroke-width="0.8" />
+                        </pattern>
+                        <!-- Net Shadow gradient -->
+                        <linearGradient id="net-depth" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#000000" stop-opacity="0.65"/>
+                            <stop offset="100%" stop-color="#000000" stop-opacity="0.12"/>
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Back Net Depth Shadow -->
+                    <rect x="25" y="25" width="550" height="260" fill="url(#net-depth)"/>
+
+                    <!-- Back Net Plane -->
+                    <polygon points="55,40 545,40 580,285 20,285" fill="url(#net-mesh)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+
+                    <!-- Left Side Net -->
+                    <polygon points="12,14 55,40 20,285 12,285" fill="url(#net-mesh)" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+
+                    <!-- Right Side Net -->
+                    <polygon points="588,14 545,40 580,285 588,285" fill="url(#net-mesh)" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+
+                    <!-- Net Roof -->
+                    <polygon points="12,14 588,14 545,40 55,40" fill="url(#net-mesh)" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+
+                    <!-- Ground Goal Line Base Tube -->
+                    <line x1="8" y1="285" x2="592" y2="285" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+
+                    <!-- Goal Posts (White Thick Stanchions with 3D gradient) -->
+                    <!-- Left Post -->
+                    <rect x="6" y="8" width="16" height="280" rx="4" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+                    <!-- Right Post -->
+                    <rect x="578" y="8" width="16" height="280" rx="4" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+                    <!-- Crossbar -->
+                    <rect x="6" y="4" width="588" height="16" rx="4" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+
+                    <!-- Goal Corner Brackets -->
+                    <circle cx="14" cy="12" r="7" fill="#cbd5e1"/>
+                    <circle cx="586" cy="12" r="7" fill="#cbd5e1"/>
+                </svg>
+
+                <!-- Goalkeeper positioned directly on the goal line between the posts -->
+                <div id="goalkeeper" class="goalkeeper-actor">
+                    <svg class="w-full h-full" viewBox="0 0 160 210" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Shadow on the goal line -->
+                        <ellipse cx="80" cy="202" rx="46" ry="8" fill="rgba(0,0,0,0.55)" />
+
+                        <!-- Legs & Cleats -->
+                        <rect x="48" y="140" width="18" height="52" rx="7" fill="#0f172a" />
+                        <rect x="94" y="140" width="18" height="52" rx="7" fill="#0f172a" />
+                        <!-- Red MUFC Socks -->
+                        <rect x="48" y="162" width="18" height="26" fill="#dc2626" />
+                        <rect x="94" y="162" width="18" height="26" fill="#dc2626" />
+                        <!-- Boots -->
+                        <path d="M 44 192 L 68 192 L 70 202 L 40 202 Z" fill="#000000"/>
+                        <path d="M 92 192 L 116 192 L 120 202 L 90 202 Z" fill="#000000"/>
+
+                        <!-- Goalkeeper Shorts (Black) -->
+                        <path d="M 40 108 L 120 108 L 124 146 L 88 146 L 80 132 L 72 146 L 36 146 Z" fill="#111827" stroke="#000" stroke-width="1.5"/>
+
+                        <!-- Torso: Classic Manchester United Goalie Jersey (Red with Gold & Black Trims) -->
+                        <path d="M 44 48 L 116 48 L 124 112 L 36 112 Z" fill="#b91c1c" stroke="#7f1d1d" stroke-width="2"/>
+                        <path d="M 52 48 L 80 75 L 108 48" fill="none" stroke="#facc15" stroke-width="3"/>
+                        <!-- Number 1 on Jersey -->
+                        <text x="80" y="94" fill="#ffffff" font-size="28" font-weight="900" text-anchor="middle" font-family="sans-serif">1</text>
+                        <!-- Club crest patch -->
+                        <circle cx="62" cy="70" r="7" fill="#facc15" stroke="#000" stroke-width="1"/>
+
+                        <!-- Left Arm (Ready to dive) -->
+                        <path d="M 44 54 L 14 36" stroke="#b91c1c" stroke-width="16" stroke-linecap="round"/>
+                        <!-- Goalkeeper Glove Left -->
+                        <circle cx="10" cy="32" r="14" fill="#facc15" stroke="#1f2937" stroke-width="2.5"/>
+                        <path d="M 6 26 L 14 26 M 6 32 L 14 32 M 6 38 L 14 38" stroke="#000" stroke-width="1.5"/>
+
+                        <!-- Right Arm (Ready to dive) -->
+                        <path d="M 116 54 L 146 36" stroke="#b91c1c" stroke-width="16" stroke-linecap="round"/>
+                        <!-- Goalkeeper Glove Right -->
+                        <circle cx="150" cy="32" r="14" fill="#facc15" stroke="#1f2937" stroke-width="2.5"/>
+                        <path d="M 146 26 L 154 26 M 146 32 L 154 32 M 146 38 L 154 38" stroke="#000" stroke-width="1.5"/>
+
+                        <!-- Head & Goalie Hair -->
+                        <circle cx="80" cy="28" r="18" fill="#fbcfe8" />
+                        <path d="M 62 25 Q 80 6 98 25 Q 88 12 72 14 Z" fill="#78350f" />
+                        <!-- Eyes focused forward -->
+                        <ellipse cx="74" cy="28" rx="2.5" ry="3.5" fill="#000"/>
+                        <ellipse cx="86" cy="28" rx="2.5" ry="3.5" fill="#000"/>
+                        <path d="M 72 38 Q 80 44 88 38" stroke="#b91c1c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    </svg>
+                </div>
+
+                <!-- 5 Large Touch Target Zones covering the goal mouth -->
+                <div class="target-zones-grid" id="zones-container" role="region" aria-label="Goal Target Areas">
+                    
+                    <!-- Top Left Zone -->
+                    <button class="target-btn target-tl" data-zone="TL" aria-label="Shoot Top Left Corner">
+                        <span class="text-3xl sm:text-4xl">↖️</span>
+                        <span class="text-xs sm:text-sm uppercase tracking-wider font-black">TOP LEFT</span>
+                    </button>
+
+                    <!-- Center Zone -->
+                    <button class="target-btn target-c" data-zone="C" aria-label="Shoot Center of Goal">
+                        <span class="text-4xl sm:text-5xl">🎯</span>
+                        <span class="text-xs sm:text-base uppercase tracking-wider font-black">CENTER</span>
+                    </button>
+
+                    <!-- Top Right Zone -->
+                    <button class="target-btn target-tr" data-zone="TR" aria-label="Shoot Top Right Corner">
+                        <span class="text-3xl sm:text-4xl">↗️</span>
+                        <span class="text-xs sm:text-sm uppercase tracking-wider font-black">TOP RIGHT</span>
+                    </button>
+
+                    <!-- Bottom Left Zone -->
+                    <button class="target-btn target-bl" data-zone="BL" aria-label="Shoot Bottom Left Low">
+                        <span class="text-3xl sm:text-4xl">↙️</span>
+                        <span class="text-xs sm:text-sm uppercase tracking-wider font-black">LOW LEFT</span>
+                    </button>
+
+                    <!-- Bottom Right Zone -->
+                    <button class="target-btn target-br" data-zone="BR" aria-label="Shoot Bottom Right Low">
+                        <span class="text-3xl sm:text-4xl">↘️</span>
+                        <span class="text-xs sm:text-sm uppercase tracking-wider font-black">LOW RIGHT</span>
+                    </button>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Soft Elliptical Grass Contact Shadow -->
+        <div id="ball-shadow" class="football-shadow"></div>
+
+        <!-- High-Fidelity 3D Spherical Football Graphic -->
+        <div id="football" class="football-actor">
+            <div id="football-spinner" class="football-inner-spinner">
+                <svg class="w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- Perfect Sphere Clip Path -->
+                        <clipPath id="ballSphereClip">
+                            <circle cx="100" cy="100" r="95" />
+                        </clipPath>
+
+                        <!-- White Leather Panel Base Radial Gradient -->
+                        <radialGradient id="leatherWhiteGrad" cx="38%" cy="32%" r="68%">
+                            <stop offset="0%" stop-color="#ffffff" />
+                            <stop offset="65%" stop-color="#f1f5f9" />
+                            <stop offset="90%" stop-color="#e2e8f0" />
+                            <stop offset="100%" stop-color="#cbd5e1" />
+                        </radialGradient>
+
+                        <!-- Classic Black Panel Texture & Leather Specular Shading -->
+                        <radialGradient id="panelDarkGrad" cx="35%" cy="30%" r="72%">
+                            <stop offset="0%" stop-color="#334155" />
+                            <stop offset="55%" stop-color="#0f172a" />
+                            <stop offset="100%" stop-color="#020617" />
+                        </radialGradient>
+
+                        <!-- Multi-Layer 3D Ambient Occlusion & Sphere Curvature Gradient -->
+                        <radialGradient id="sphereVolumeGrad" cx="32%" cy="28%" r="72%">
+                            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.32" />
+                            <stop offset="42%" stop-color="#ffffff" stop-opacity="0" />
+                            <stop offset="72%" stop-color="#000000" stop-opacity="0.22" />
+                            <stop offset="92%" stop-color="#020617" stop-opacity="0.68" />
+                            <stop offset="100%" stop-color="#000000" stop-opacity="0.88" />
+                        </radialGradient>
+
+                        <!-- Specular Sunlight Glint (Top-Left) -->
+                        <linearGradient id="specularGlint" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85" />
+                            <stop offset="60%" stop-color="#ffffff" stop-opacity="0.25" />
+                            <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+                        </linearGradient>
+
+                        <!-- Turf Bounce Light Reflection (Bottom Green Hue) -->
+                        <radialGradient id="turfBounceGrad" cx="50%" cy="96%" r="50%">
+                            <stop offset="0%" stop-color="#22c55e" stop-opacity="0.3" />
+                            <stop offset="100%" stop-color="#22c55e" stop-opacity="0" />
+                        </radialGradient>
+                    </defs>
+
+                    <!-- Clipped 3D Sphere Surface -->
+                    <g clip-path="url(#ballSphereClip)">
+                        <!-- Spherical Base Leather -->
+                        <circle cx="100" cy="100" r="95" fill="url(#leatherWhiteGrad)" />
+
+                        <!-- Center Curved Black Pentagon (Iconic Telstar Geometry) -->
+                        <path d="M 100,66 C 113,72 121,79 131,90 C 128,104 125,116 119,126 C 107,128 93,128 81,126 C 75,116 72,104 69,90 C 79,79 87,72 100,66 Z" 
+                              fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2.2" />
+
+                        <!-- Outer Curved Black Panels Wrapping Over Spherical Horizon -->
+                        <!-- Top Peripheral Panel -->
+                        <path d="M 100,34 C 88,23 84,14 82,1 C 94,0 106,0 118,1 C 116,14 112,23 100,34 Z" 
+                              fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2.2" />
+
+                        <!-- Top-Right Peripheral Panel -->
+                        <path d="M 158,76 C 150,62 148,50 152,38 C 168,48 182,62 192,80 C 182,82 170,80 158,76 Z" 
+                              fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2.2" />
+
+                        <!-- Bottom-Right Peripheral Panel -->
+                        <path d="M 146,148 C 142,162 144,174 150,186 C 168,172 182,154 191,132 C 176,134 162,138 146,148 Z" 
+                              fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2.2" />
+
+                        <!-- Bottom-Left Peripheral Panel -->
+                        <path d="M 54,148 C 38,138 24,134 9,132 C 18,154 32,172 50,186 C 56,174 58,162 54,148 Z" 
+                              fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2.2" />
+
+                        <!-- Top-Left Peripheral Panel -->
+                        <path d="M 42,76 C 30,80 18,82 8,80 C 18,62 32,48 48,38 C 52,50 50,62 42,76 Z" 
+                              fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2.2" />
+
+                        <!-- Deep Recessed Seams Connecting Central Pentagon to Horizon -->
+                        <path d="M 100,66 C 100,54 100,44 100,34" stroke="#334155" stroke-width="2.6" stroke-linecap="round"/>
+                        <path d="M 131,90 C 141,84 150,80 158,76" stroke="#334155" stroke-width="2.6" stroke-linecap="round"/>
+                        <path d="M 119,126 C 128,134 137,140 146,148" stroke="#334155" stroke-width="2.6" stroke-linecap="round"/>
+                        <path d="M 81,126 C 72,134 63,140 54,148" stroke="#334155" stroke-width="2.6" stroke-linecap="round"/>
+                        <path d="M 69,90 C 59,84 50,80 42,76" stroke="#334155" stroke-width="2.6" stroke-linecap="round"/>
+
+                        <!-- Outer Hexagonal Seams Between White Panels -->
+                        <path d="M 100,34 C 120,38 136,46 152,38" stroke="#475569" stroke-width="2.2"/>
+                        <path d="M 158,76 C 166,98 162,120 146,148" stroke="#475569" stroke-width="2.2"/>
+                        <path d="M 146,148 C 122,168 78,168 54,148" stroke="#475569" stroke-width="2.2"/>
+                        <path d="M 54,148 C 38,120 34,98 42,76" stroke="#475569" stroke-width="2.2"/>
+                        <path d="M 42,76 C 58,46 74,38 100,34" stroke="#475569" stroke-width="2.2"/>
+
+                        <!-- Fine Leather Stitched Highlight Line along Seams for Tactile 3D Depth -->
+                        <path d="M 100.8,66 C 100.8,54 100.8,44 100.8,34" stroke="#ffffff" stroke-width="0.9" opacity="0.65"/>
+                        <path d="M 131,90.8 C 141,84.8 150,80.8 158,76.8" stroke="#ffffff" stroke-width="0.9" opacity="0.65"/>
+                        <path d="M 119.8,126 C 128.8,134 137.8,140 146.8,148" stroke="#ffffff" stroke-width="0.9" opacity="0.65"/>
+                        <path d="M 81,126.8 C 72,134.8 63,140.8 54,148.8" stroke="#ffffff" stroke-width="0.9" opacity="0.65"/>
+                        <path d="M 69,90.8 C 59,84.8 50,80.8 42,76.8" stroke="#ffffff" stroke-width="0.9" opacity="0.65"/>
+
+                        <!-- Spherical Ambient Occlusion & Volume Overlay -->
+                        <circle cx="100" cy="100" r="95" fill="url(#sphereVolumeGrad)" />
+
+                        <!-- Specular Sunlight Glint (Top-Left Highlight) -->
+                        <ellipse cx="68" cy="54" rx="28" ry="15" transform="rotate(-30 68 54)" fill="url(#specularGlint)" />
+                        <circle cx="62" cy="48" r="6" fill="#ffffff" opacity="0.8" />
+
+                        <!-- Turf Grass Bounce Glow on Ball Underside -->
+                        <ellipse cx="100" cy="182" rx="65" ry="24" fill="url(#turfBounceGrad)" />
+                    </g>
+
+                    <!-- Outer Ball Rim Stroke -->
+                    <circle cx="100" cy="100" r="94.5" fill="none" stroke="#0f172a" stroke-width="1.8" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- In-Pitch Secondary Next Kick Action Button (Permanently visible after shot) -->
+        <div id="gameplay-prompt-bar" class="w-full max-w-xl mx-auto px-4 pb-4 z-40 flex flex-col items-center">
+            <button id="btn-pitch-next-kick" class="hidden w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black text-2xl font-black rounded-2xl shadow-[0_10px_30px_rgba(234,179,8,0.6)] border-4 border-white transform transition hover:scale-105 active:scale-95 flex items-center justify-center gap-3">
+                <span>TAKE ANOTHER SHOT</span>
+                <span class="text-3xl">⚽➔</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Goal Celebration & Video Modal Overlay with Fail-Safe Next Kick Flow -->
+    <div id="result-modal" class="fixed inset-0 bg-black/92 backdrop-blur-md hidden flex-col items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="w-full max-w-3xl flex flex-col items-center text-center my-auto">
+            
+            <!-- Result Banner Title -->
+            <div id="modal-banner" class="mb-4">
+                <h2 id="modal-title" class="text-5xl sm:text-7xl font-black tracking-tight text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)]">
+                    GOAL!
+                </h2>
+                <p id="modal-subtitle" class="text-xl sm:text-2xl font-extrabold text-amber-300 mt-2 px-6 py-2 rounded-full bg-slate-800/90 border-2 border-amber-400 inline-block shadow-lg">
+                    GINOLA ROCKET INTO THE TOP CORNER!
+                </p>
+            </div>
+
+            <!-- Video Player with Direct Fallback Container -->
+            <div class="relative w-full max-w-2xl aspect-video rounded-2xl overflow-hidden border-4 border-amber-400 shadow-2xl bg-slate-950 flex items-center justify-center">
+                <video id="goal-video" class="w-full h-full object-cover" playsinline preload="auto">
+                    <source src="ginola-goal.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+
+                <!-- Fallback card displayed if video is missing or blocked -->
+                <div id="video-fallback" class="hidden absolute inset-0 bg-gradient-to-br from-slate-900 to-black text-white p-6 flex flex-col items-center justify-center text-center">
+                    <div class="text-6xl mb-3">⚽⚡</div>
+                    <div class="text-2xl sm:text-3xl font-black text-amber-400">DAVID GINOLA SCORES!</div>
+                    <p class="text-slate-300 mt-2 max-w-md text-sm sm:text-base">
+                        What a screamer! The French maestro sends St. James' Park into raptures!
+                    </p>
+                    <span class="mt-4 text-xs bg-slate-800 text-slate-400 px-3 py-1 rounded-full border border-slate-700">
+                        (Place "ginola-goal.mp4" alongside index.html to watch real clip)
+                    </span>
+                </div>
+            </div>
+
+            <!-- HUGE, UNMISSABLE NEXT KICK BUTTON (Always clickable, never traps user) -->
+            <div class="mt-6 w-full flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button id="btn-modal-next-kick" class="w-full sm:w-auto px-12 py-5 bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-400 hover:to-emerald-300 text-slate-950 font-black text-2xl sm:text-3xl rounded-full shadow-[0_0_40px_rgba(34,197,94,0.7)] border-4 border-white transform transition hover:scale-105 active:scale-95 flex items-center justify-center gap-3">
+                    <span>NEXT KICK</span>
+                    <span class="text-4xl">⚽➔</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Core Match State Variables
+        let scoreNewcastle = 0;
+        let scoreManUtd = 0;
+        let kicksTotal = 0;
+        let isShooting = false;
+        let soundEnabled = true;
+        let isDarkMode = true;
+
+        // Accurate Coordinates for 3D Target Trajectories and Goalie Dives
+        const TARGET_COORDINATES = {
+            'TL': { ballLeft: '22%', ballBottom: '68%', goalieX: -130, goalieY: -45, goalieRot: -40 },
+            'TR': { ballLeft: '78%', ballBottom: '68%', goalieX: 130,  goalieY: -45, goalieRot: 40 },
+            'C':  { ballLeft: '50%', ballBottom: '65%', goalieX: 0,    goalieY: -35, goalieRot: 0 },
+            'BL': { ballLeft: '22%', ballBottom: '48%', goalieX: -120, goalieY: 10,  goalieRot: -70 },
+            'BR': { ballLeft: '78%', ballBottom: '48%', goalieX: 120,  goalieY: 10,  goalieRot: 70 }
+        };
+
+        // DOM Element Lookups
+        const football = document.getElementById('football');
+        const footballSpinner = document.getElementById('football-spinner');
+        const ballShadow = document.getElementById('ball-shadow');
+        const goalkeeper = document.getElementById('goalkeeper');
+        const scoreNewcastleEl = document.getElementById('val-score-newcastle');
+        const scoreManUtdEl = document.getElementById('val-score-manutd');
+        const kicksTotalEl = document.getElementById('val-kicks-total');
+        const targetButtons = document.querySelectorAll('.target-btn');
+        const bannerText = document.getElementById('banner-text');
+        
+        // Buttons & Modals
+        const pitchNextKickBtn = document.getElementById('btn-pitch-next-kick');
+        const modalNextKickBtn = document.getElementById('btn-modal-next-kick');
+        const resultModal = document.getElementById('result-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalSubtitle = document.getElementById('modal-subtitle');
+        const goalVideo = document.getElementById('goal-video');
+        const videoFallback = document.getElementById('video-fallback');
+
+        // Toolbar elements
+        const difficultySelect = document.getElementById('select-difficulty');
+        const btnToggleSound = document.getElementById('btn-toggle-sound');
+        const soundIcon = document.getElementById('sound-icon');
+        const btnToggleTheme = document.getElementById('btn-toggle-theme');
+        const themeIcon = document.getElementById('theme-icon');
+        const btnToggleFullscreen = document.getElementById('btn-toggle-fullscreen');
+        const btnDownloadFile = document.getElementById('btn-download-file');
+
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtxClass) {
+                    audioCtx = new AudioCtxClass();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // Synthesize authentic football kick impact thud
+        function playSoundKick() {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(140, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(32, ctx.currentTime + 0.18);
+
+                gain.gain.setValueAtTime(1.0, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.19);
+            } catch(e) { console.warn(e); }
+        }
+
+        // Synthesize Goal celebration fanfare
+        function playSoundGoal() {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0, ctx.currentTime + idx * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + idx * 0.08 + 0.04);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.08 + 0.6);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + idx * 0.08);
+                    osc.stop(ctx.currentTime + idx * 0.08 + 0.65);
+                });
+            } catch(e) { console.warn(e); }
+        }
+
+        // Synthesize Referee Whistle on saved penalty
+        function playSoundSave() {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                [2000, 2040].forEach(freq => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.36);
+                });
+            } catch(e) { console.warn(e); }
+        }
+
+        function calculateGoalieDecision(playerChoice, difficulty) {
+            const allZones = ['TL', 'TR', 'C', 'BL', 'BR'];
+            const roll = Math.random();
+
+            if (difficulty === 'easy') {
+                // Easy: ~90% goals (Goalie only dives to correct zone 10% of the time)
+                if (roll < 0.10) {
+                    return playerChoice; // Save
+                } else {
+                    const otherZones = allZones.filter(z => z !== playerChoice);
+                    return otherZones[Math.floor(Math.random() * otherZones.length)];
+                }
+            } else if (difficulty === 'hard') {
+                // Hard: Pro goalie anticipates accurately 60% of the time (~40% score rate)
+                if (roll < 0.60) {
+                    return playerChoice;
+                } else {
+                    const otherZones = allZones.filter(z => z !== playerChoice);
+                    return otherZones[Math.floor(Math.random() * otherZones.length)];
+                }
+            } else {
+                // Medium: ~65% Goal chance (Goalie saves 35% of the time)
+                if (roll < 0.35) {
+                    return playerChoice;
+                } else {
+                    const otherZones = allZones.filter(z => z !== playerChoice);
+                    return otherZones[Math.floor(Math.random() * otherZones.length)];
+                }
+            }
+        }
+
+        function executePenaltyKick(targetZone) {
+            if (isShooting) return;
+            isShooting = true;
+            getAudioContext(); // Initialize audio context on player gesture
+
+            kicksTotal++;
+            kicksTotalEl.textContent = kicksTotal;
+
+            // Dim and lock target zone buttons during shot
+            targetButtons.forEach(btn => {
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.35';
+            });
+
+            // Play authentic synthesized kick thump
+            playSoundKick();
+
+            // Determine Goalkeeper dive decision based on difficulty tier
+            const difficulty = difficultySelect.value;
+            const goalieChoice = calculateGoalieDecision(targetZone, difficulty);
+            const isGoal = (targetZone !== goalieChoice);
+
+            // Animate Football trajectory: scale smoothly into 3D distance without distortion
+            const ballTarget = TARGET_COORDINATES[targetZone];
+            footballSpinner.classList.add('spinning-ball');
+            football.style.left = ballTarget.ballLeft;
+            football.style.bottom = ballTarget.ballBottom;
+            football.style.transform = 'translate(-50%, 50%) scale(0.48)';
+
+            // Dynamic grass contact shadow lifts and fades on kick
+            ballShadow.style.left = ballTarget.ballLeft;
+            ballShadow.style.bottom = '28%';
+            ballShadow.style.opacity = '0.15';
+            ballShadow.style.transform = 'translate(-50%, 50%) scale(0.4)';
+
+            // Animate Goalkeeper dive towards goalieChoice
+            const goalieMove = TARGET_COORDINATES[goalieChoice];
+            goalkeeper.style.transform = `translateX(calc(-50% + ${goalieMove.goalieX}px)) translateY(${goalieMove.goalieY}px) rotate(${goalieMove.goalieRot}deg)`;
+
+            // Process shot outcome after flight completion (550ms)
+            setTimeout(() => {
+                footballSpinner.classList.remove('spinning-ball');
+                concludePenaltyKick(isGoal, targetZone, goalieChoice);
+            }, 550);
+        }
+
+        function concludePenaltyKick(isGoal, playerZone, goalieZone) {
+            if (isGoal) {
+                // GOAL SCORED!
+                scoreNewcastle++;
+                scoreNewcastleEl.textContent = scoreNewcastle;
+                bannerText.textContent = "⚽ GOOOAL FOR NEWCASTLE! WHAT A STRIKE!";
+                
+                playSoundGoal();
+                fireConfettiCelebration();
+
+                // Setup Goal Celebration Banner
+                modalTitle.textContent = "GOAL FOR NEWCASTLE!";
+                modalTitle.className = "text-5xl sm:text-7xl font-black tracking-tight text-green-400 drop-shadow-[0_5px_20px_rgba(34,197,94,0.8)]";
+                modalSubtitle.textContent = "🎉 Brilliant penalty beat the Man Utd keeper!";
+                modalSubtitle.className = "text-xl sm:text-2xl font-extrabold text-amber-300 mt-2 px-6 py-2 rounded-full bg-slate-800/90 border-2 border-amber-400 inline-block shadow-lg";
+
+                // Open celebration video modal
+                openResultModal(true);
+
+            } else {
+                // SAVED BY GOALIE
+                scoreManUtd++;
+                scoreManUtdEl.textContent = scoreManUtd;
+                bannerText.textContent = "🧤 SAVED! The Manchester United keeper guessed right!";
+                
+                playSoundSave();
+
+                // Setup Save Notice Modal
+                modalTitle.textContent = "SAVED BY THE KEEPER!";
+                modalTitle.className = "text-5xl sm:text-7xl font-black tracking-tight text-red-500 drop-shadow-[0_5px_20px_rgba(239,68,68,0.8)]";
+                modalSubtitle.textContent = "The keeper tipped it around the post!";
+                modalSubtitle.className = "text-xl sm:text-2xl font-extrabold text-red-200 mt-2 px-6 py-2 rounded-full bg-red-950/90 border-2 border-red-500 inline-block shadow-lg";
+
+                openResultModal(false);
+            }
+
+            // Also make the in-pitch Next Kick button visible as a secondary trigger
+            pitchNextKickBtn.classList.remove('hidden');
+        }
+
+        function openResultModal(hasGoal) {
+            resultModal.classList.remove('hidden');
+            resultModal.classList.add('flex');
+
+            if (hasGoal) {
+                // Attempt to play Ginola goal video
+                goalVideo.classList.remove('hidden');
+                videoFallback.classList.add('hidden');
+                goalVideo.currentTime = 0;
+
+                const playPromise = goalVideo.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        // Smoothly show celebration card if file missing or browser blocks autoplay
+                        goalVideo.classList.add('hidden');
+                        videoFallback.classList.remove('hidden');
+                    });
+                }
+            } else {
+                // For a save, show clean goalie save banner
+                goalVideo.classList.add('hidden');
+                videoFallback.classList.remove('hidden');
+                videoFallback.innerHTML = `
+                    <div class="text-6xl mb-3">🧤❌</div>
+                    <div class="text-3xl font-black text-red-400">DENIED BY THE KEEPER!</div>
+                    <p class="text-slate-300 mt-2 max-w-md">Great dive by the Manchester United #1. Brush it off and take the next shot!</p>
+                `;
+            }
+        }
+
+        // Next Kick Reset Function - Unmissable and fail-safe
+        function resetForNextPenalty() {
+            // Hide Modals
+            resultModal.classList.add('hidden');
+            resultModal.classList.remove('flex');
+            pitchNextKickBtn.classList.add('hidden');
+
+            try {
+                goalVideo.pause();
+                goalVideo.currentTime = 0;
+            } catch(e) {}
+
+            // Reset Ball Position and Scale to penalty spot
+            football.style.left = '50%';
+            football.style.bottom = '22%';
+            football.style.transform = 'translate(-50%, 50%) scale(1)';
+            footballSpinner.classList.remove('spinning-ball');
+            footballSpinner.style.transform = 'rotate(0deg)';
+
+            // Reset Turf Contact Shadow
+            ballShadow.style.left = '50%';
+            ballShadow.style.bottom = '21%';
+            ballShadow.style.opacity = '1';
+            ballShadow.style.transform = 'translate(-50%, 50%) scale(1)';
+
+            // Reset Goalkeeper squarely onto the goal line
+            goalkeeper.style.transform = 'translateX(-50%) translate3d(0, 0, 0)';
+
+            // Re-enable target buttons
+            targetButtons.forEach(btn => {
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+            });
+
+            bannerText.textContent = "★ CHOOSE YOUR ZONE TO SHOOT! HOWAY THE LADS! ★";
+            isShooting = false;
+        }
+
+        // Attach fail-safe reset clicks
+        modalNextKickBtn.addEventListener('click', resetForNextPenalty);
+        pitchNextKickBtn.addEventListener('click', resetForNextPenalty);
+        goalVideo.addEventListener('ended', resetForNextPenalty);
+        goalVideo.addEventListener('error', () => {
+            goalVideo.classList.add('hidden');
+            videoFallback.classList.remove('hidden');
+        });
+
+        // Attach click and high-performance touch listeners to all 5 target zones
+        targetButtons.forEach(btn => {
+            const zone = btn.getAttribute('data-zone');
+            
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                executePenaltyKick(zone);
+            });
+
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                executePenaltyKick(zone);
+            }, { passive: false });
+        });
+
+        // Fullscreen toggle with cross-device support
+        btnToggleFullscreen.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        });
+
+        // Theme Toggle (Light / Dark mode)
+        btnToggleTheme.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                document.body.classList.remove('light-theme');
+                themeIcon.textContent = '🌙';
+            } else {
+                document.body.classList.add('light-theme');
+                themeIcon.textContent = '☀️';
+            }
+        });
+
+        // Audio Mute/Unmute Toggle
+        btnToggleSound.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
+            getAudioContext();
+        });
+
+        // One-Click Download of complete game file for direct GitHub hosting
+        btnDownloadFile.addEventListener('click', () => {
+            const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const downloadUrl = URL.createObjectURL(blob);
+            const tempAnchor = document.createElement('a');
+            tempAnchor.href = downloadUrl;
+            tempAnchor.download = 'index.html';
+            document.body.appendChild(tempAnchor);
+            tempAnchor.click();
+            document.body.removeChild(tempAnchor);
+            URL.revokeObjectURL(downloadUrl);
+        });
+
+        const confettiCanvas = document.getElementById('confetti-canvas');
+        const cCtx = confettiCanvas.getContext('2d');
+        let confettiParticles = [];
+        let confettiAnimationId = null;
+
+        function resizeConfetti() {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeConfetti);
+        resizeConfetti();
+
+        function fireConfettiCelebration() {
+            confettiParticles = [];
+            const colors = ['#facc15', '#ffffff', '#000000', '#22c55e', '#38bdf8'];
+            for (let i = 0; i < 90; i++) {
+                confettiParticles.push({
+                    x: window.innerWidth * 0.5,
+                    y: window.innerHeight * 0.4,
+                    vx: (Math.random() - 0.5) * 18,
+                    vy: (Math.random() - 0.8) * 18,
+                    size: Math.random() * 8 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * 360,
+                    vRot: (Math.random() - 0.5) * 10
+                });
+            }
+
+            if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+            renderConfetti();
+        }
+
+        function renderConfetti() {
+            cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            let activeParticles = 0;
+
+            confettiParticles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.38; // gravity
+                p.vx *= 0.98; // air resistance
+                p.rot += p.vRot;
+
+                if (p.y < confettiCanvas.height + 20) {
+                    activeParticles++;
+                    cCtx.save();
+                    cCtx.translate(p.x, p.y);
+                    cCtx.rotate((p.rot * Math.PI) / 180);
+                    cCtx.fillStyle = p.color;
+                    cCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.7);
+                    cCtx.restore();
+                }
+            });
+
+            if (activeParticles > 0) {
+                confettiAnimationId = requestAnimationFrame(renderConfetti);
+            } else {
+                cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            }
+        }
+    </script>
+</body>
+</html>
