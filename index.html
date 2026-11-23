@@ -532,13 +532,14 @@
         /* ==========================================================================
            FAR LAYER: ST. JAMES' PARK GALLOWGATE END VECTOR BACKDROP + CROWD FLASHES
            ========================================================================== */
+        /* Oversized bleed margins keep edges completely hidden during ±11° drone banking & S-curve sweeps */
         .stadium-backdrop {
             position: absolute;
-            top: -8%;
-            left: -8%;
-            width: 116%;
-            height: 53%;
-            min-height: 215px;
+            top: -22%;
+            left: -26%;
+            width: 152%;
+            height: 68%;
+            min-height: 250px;
             pointer-events: none;
         }
 
@@ -618,10 +619,10 @@
            ========================================================================== */
         .pitch-layer {
             position: absolute;
-            top: 41%;
-            bottom: -14%;
-            left: -10%;
-            right: -10%;
+            top: 40%;
+            bottom: -26%;
+            left: -28%;
+            right: -28%;
             overflow: hidden;
             background: var(--turf-edge);
         }
@@ -942,6 +943,17 @@
             pointer-events: none;
         }
 
+        /* Subtle focus pulse when the drone swoops down and locks onto the penalty spot */
+        @keyframes spotSettlePulse {
+            0%   { transform: scale(1);    box-shadow: 0 0 14px rgba(255,255,255,0.72), 0 0 0 6px rgba(15,65,30,0.32); }
+            45%  { transform: scale(1.22); box-shadow: 0 0 28px rgba(250,204,21,0.95),  0 0 0 14px rgba(250,204,21,0.28); }
+            100% { transform: scale(1);    box-shadow: 0 0 14px rgba(255,255,255,0.72), 0 0 0 6px rgba(15,65,30,0.32); }
+        }
+
+        .penalty-spot.spot-settle-pulse {
+            animation: spotSettlePulse 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
         .football-shadow {
             position: absolute;
             bottom: 22.5%;
@@ -1080,6 +1092,40 @@
             animation: goalFloodlightFlash 0.65s ease-out forwards;
         }
 
+        /* Dynamic Speed Vignette & Sweeping Anamorphic Floodlight Lens Flare during Drone Swoop */
+        #drone-speed-vignette {
+            position: absolute;
+            inset: 0;
+            z-index: 53;
+            pointer-events: none;
+            opacity: 0;
+            background:
+                radial-gradient(ellipse 76% 68% at 50% 48%, rgba(0, 0, 0, 0) 42%, rgba(2, 6, 18, 0.78) 100%);
+            will-change: opacity;
+        }
+
+        #drone-lens-flare {
+            position: absolute;
+            top: 8%;
+            left: -15%;
+            width: 130%;
+            height: 220px;
+            z-index: 54;
+            pointer-events: none;
+            opacity: 0;
+            background:
+                radial-gradient(ellipse 52% 14% at 50% 45%, rgba(254, 249, 195, 0.65) 0%, rgba(125, 211, 252, 0.28) 38%, rgba(56, 189, 248, 0) 76%),
+                radial-gradient(circle at 28% 50%, rgba(255, 255, 255, 0.42) 0%, rgba(250, 204, 21, 0.14) 24%, rgba(255, 255, 255, 0) 54%),
+                radial-gradient(circle at 72% 46%, rgba(186, 230, 253, 0.38) 0%, rgba(255, 255, 255, 0) 48%);
+            mix-blend-mode: screen;
+            will-change: transform, opacity;
+        }
+
+        body.light-theme #drone-lens-flare {
+            background:
+                radial-gradient(ellipse 50% 14% at 50% 45%, rgba(255, 255, 255, 0.55) 0%, rgba(254, 240, 138, 0.22) 40%, rgba(255, 255, 255, 0) 74%);
+        }
+
         /* ==========================================================================
            FEATURE 1: CINEMATIC AERIAL DRONE FLY-IN INTRO OVERLAY
            ========================================================================== */
@@ -1089,19 +1135,15 @@
             z-index: 60;
             overflow: hidden;
             pointer-events: none;
-            background: #030712;
+            background: transparent;
             will-change: opacity;
-        }
-
-        body.light-theme #drone-intro-overlay {
-            background: #2589d8;
         }
 
         .drone-layer {
             position: absolute;
-            inset: -8%;
-            width: 116%;
-            height: 116%;
+            inset: -12%;
+            width: 124%;
+            height: 124%;
             transform-origin: 50% 50%;
             will-change: transform, opacity;
         }
@@ -1123,23 +1165,24 @@
         body.light-theme .drone-roof-metal { fill: #ffffff; }
         body.light-theme .drone-roof-shadow { fill: #64748b; }
 
-        /* Broadcast Matchday Lower-Third Card during Drone Intro */
+        /* Broadcast Matchday Lower-Third Card (Independent of Aerial Crossfade so it stays crisp through Phase 2) */
         #drone-broadcast-card {
             position: absolute;
             left: clamp(16px, 4vw, 48px);
             bottom: clamp(50px, 12vh, 96px);
-            z-index: 62;
+            z-index: 64;
             display: flex;
             align-items: stretch;
             border-radius: 12px;
             overflow: hidden;
             background: rgba(7, 13, 25, 0.90);
-            border: 1.5px solid rgba(250, 204, 21, 0.58);
+            border: 1.5px solid rgba(250, 204, 21, 0.62);
             box-shadow: 0 14px 36px rgba(0, 0, 0, 0.65);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             transform: translate3d(-24px, 0, 0);
             opacity: 0;
+            pointer-events: none;
             will-change: transform, opacity;
         }
 
@@ -1160,6 +1203,7 @@
             display: flex;
             flex-direction: column;
             gap: 3px;
+            transition: opacity 0.22s ease;
         }
 
         .broadcast-live-row {
@@ -2346,6 +2390,8 @@
             <div class="lens-streak lens-streak-right"></div>
         </div>
         <div id="goal-flash-overlay" aria-hidden="true"></div>
+        <div id="drone-speed-vignette" aria-hidden="true"></div>
+        <div id="drone-lens-flare" aria-hidden="true"></div>
 
         <!-- ==================================================================
              CINEMATIC AERIAL DRONE FLY-IN INTRO OVERLAY
@@ -2453,44 +2499,66 @@
 
                     <!-- Towering Aerial Floodlights & Volumetric Cones -->
                     <g>
+                        <!-- Left Aerial Floodlight Bank -->
                         <rect x="215" y="218" width="84" height="30" rx="6" fill="#0f172a" stroke="#64748b" stroke-width="2.5"/>
-                        <rect x="223" y="225" width="68" height="16" rx="3" fill="#fef9c3"/>
+                        <g fill="#fef9c3">
+                            <circle cx="231" cy="228" r="4"/><circle cx="247" cy="228" r="4"/><circle cx="263" cy="228" r="4"/><circle cx="279" cy="228" r="4"/>
+                            <circle cx="231" cy="239" r="4"/><circle cx="247" cy="239" r="4"/><circle cx="263" cy="239" r="4"/><circle cx="279" cy="239" r="4"/>
+                        </g>
+                        <!-- Right Aerial Floodlight Bank -->
                         <rect x="1141" y="218" width="84" height="30" rx="6" fill="#0f172a" stroke="#64748b" stroke-width="2.5"/>
-                        <rect x="1149" y="225" width="68" height="16" rx="3" fill="#fef9c3"/>
-                    </g>
-
-                    <g class="drone-night-only">
-                        <polygon points="215,248 299,248 760,650 280,650" fill="url(#droneBeamL)"/>
-                        <polygon points="1141,248 1225,248 1160,650 680,650" fill="url(#droneBeamR)"/>
-                        <circle cx="257"  cy="233" r="95" fill="url(#droneFlare)"/>
-                        <circle cx="1183" cy="233" r="95" fill="url(#droneFlare)"/>
+                        <g fill="#fef9c3">
+                            <circle cx="1157" cy="228" r="4"/><circle cx="1173" cy="228" r="4"/><circle cx="1189" cy="228" r="4"/><circle cx="1205" cy="228" r="4"/>
+                            <circle cx="1157" cy="239" r="4"/><circle cx="1173" cy="239" r="4"/><circle cx="1189" cy="239" r="4"/><circle cx="1205" cy="239" r="4"/>
+                        </g>
+                        <!-- Night Floodlight Volumetric Cones & Flares -->
+                        <g class="drone-night-only">
+                            <polygon points="215,248 299,248 760,620 260,620" fill="url(#droneBeamL)"/>
+                            <polygon points="1141,248 1225,248 1180,620 680,620" fill="url(#droneBeamR)"/>
+                            <circle cx="257" cy="233" r="68" fill="url(#droneFlare)"/>
+                            <circle cx="1183" cy="233" r="68" fill="url(#droneFlare)"/>
+                        </g>
                     </g>
                 </svg>
             </div>
 
-            <!-- Drone Layer C: Foreground Roof Truss Overhang (Rushes Past Lens During Dive) -->
+            <!-- Drone Layer C: Overhead Gallowgate Roof Girder/Truss Silhouette (Swoops Past Top of Frame) -->
             <div id="drone-truss-pass-layer" class="drone-layer">
                 <svg viewBox="0 0 1440 810" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M-40,-20 L1480,-20 L1480,105 Q720,40 -40,105 Z" fill="#090f1d" opacity="0.9"/>
-                    <path d="M-40,95 Q720,30 1480,95" fill="none" stroke="#64748b" stroke-width="9"/>
-                    <line x1="220"  y1="0" x2="275"  y2="84" stroke="#334155" stroke-width="6"/>
-                    <line x1="520"  y1="0" x2="545"  y2="68" stroke="#334155" stroke-width="6"/>
-                    <line x1="920"  y1="0" x2="895"  y2="68" stroke="#334155" stroke-width="6"/>
-                    <line x1="1220" y1="0" x2="1165" y2="84" stroke="#334155" stroke-width="6"/>
+                    <path d="M-80,-40 L1520,-40 L1520,148 Q720,62 -80,148 Z" fill="#060b16" opacity="0.96"/>
+                    <path d="M-80,136 Q720,48 1520,136" fill="none" stroke="#94a3b8" stroke-width="11"/>
+                    <path d="M-80,104 Q720,24 1520,104" fill="none" stroke="#334155" stroke-width="6"/>
+                    <!-- Steel Roof Lattice Cross-Bracing -->
+                    <g stroke="#475569" stroke-width="6.5" stroke-linecap="round">
+                        <line x1="120"  y1="0" x2="195"  y2="124"/>
+                        <line x1="280"  y1="0" x2="210"  y2="120"/>
+                        <line x1="420"  y1="0" x2="470"  y2="98"/>
+                        <line x1="590"  y1="0" x2="540"  y2="92"/>
+                        <line x1="850"  y1="0" x2="900"  y2="92"/>
+                        <line x1="1020" y1="0" x2="970"  y2="98"/>
+                        <line x1="1160" y1="0" x2="1230" y2="120"/>
+                        <line x1="1320" y1="0" x2="1245" y2="124"/>
+                    </g>
+                    <!-- Overhead Floodlight Gantry Underside Glints -->
+                    <g fill="#fef9c3" opacity="0.88">
+                        <rect x="260"  y="108" width="28" height="8" rx="3"/>
+                        <rect x="698"  y="76"  width="44" height="8" rx="3"/>
+                        <rect x="1152" y="108" width="28" height="8" rx="3"/>
+                    </g>
                 </svg>
             </div>
+        </div>
 
-            <!-- Broadcast Lower-Third Title Card -->
-            <div id="drone-broadcast-card">
-                <div class="broadcast-card-stripes"></div>
-                <div class="broadcast-card-body">
-                    <div class="broadcast-live-row">
-                        <span class="live-dot"></span>
-                        <span class="broadcast-kicker">MATCHDAY LIVE • ST. JAMES' PARK</span>
-                    </div>
-                    <div class="broadcast-headline">PENALTY SHOOTOUT — GALLOWGATE END</div>
-                    <div class="broadcast-sub">NEWCASTLE UNITED vs MANCHESTER UNITED • FIRST-PERSON POV</div>
+        <!-- Broadcast Lower-Third Title Card (Transitions Smoothly from Aerial Cam to Penalty Spot POV) -->
+        <div id="drone-broadcast-card" aria-hidden="true">
+            <div class="broadcast-card-stripes"></div>
+            <div id="drone-broadcast-body" class="broadcast-card-body">
+                <div class="broadcast-live-row">
+                    <span class="live-dot"></span>
+                    <span id="drone-broadcast-kicker" class="broadcast-kicker">MATCHDAY LIVE • ST. JAMES' PARK</span>
                 </div>
+                <div id="drone-broadcast-headline" class="broadcast-headline">PENALTY SHOOTOUT — GALLOWGATE END</div>
+                <div id="drone-broadcast-sub" class="broadcast-sub">NEWCASTLE UNITED vs MANCHESTER UNITED • AERIAL APPROACH</div>
             </div>
         </div>
 
@@ -2564,7 +2632,9 @@
 
     <script>
         /* ======================================================================
-           1. EXACT 5-CLIP HIGHLIGHT VIDEO BANK (PRESERVED VERBATIM)
+           1. HIGHLIGHT VIDEO BANK (CAPITAL 'C' FILENAMES FOR GITHUB PAGES)
+           To add more clips later, simply append another { file, title, desc }
+           object to this array — random non-repeating selection scales automatically!
            ====================================================================== */
         const HIGHLIGHT_CLIPS = [
             {
@@ -2622,10 +2692,17 @@
         const droneSkyLayer = document.getElementById('drone-sky-layer');
         const droneStadiumLayer = document.getElementById('drone-stadium-layer');
         const droneTrussLayer = document.getElementById('drone-truss-pass-layer');
+        const droneSpeedVignette = document.getElementById('drone-speed-vignette');
+        const droneLensFlare = document.getElementById('drone-lens-flare');
         const droneBroadcastCard = document.getElementById('drone-broadcast-card');
+        const droneBroadcastBody = document.getElementById('drone-broadcast-body');
+        const droneBroadcastKicker = document.getElementById('drone-broadcast-kicker');
+        const droneBroadcastHeadline = document.getElementById('drone-broadcast-headline');
+        const droneBroadcastSub = document.getElementById('drone-broadcast-sub');
         const btnSkipIntro = document.getElementById('btn-skip-intro');
 
         // Core Gameplay Elements
+        const penaltySpot = document.getElementById('penalty-spot');
         const football = document.getElementById('football');
         const footballSpinner = document.getElementById('football-spinner');
         const ballShadow = document.getElementById('ball-shadow');
@@ -2681,7 +2758,7 @@
             return audioCtx;
         }
 
-        /** Synthesizes stadium aerial drone wind swoop + distant crowd swell */
+        /** Synthesizes 4.8s stadium aerial drone wind swoop, S-curve banking air rush & crowd swell */
         function playSoundDroneIntro() {
             if (!soundEnabled) return;
             try {
@@ -2689,7 +2766,7 @@
                 if (!ctx || ctx.state !== 'running') return;
 
                 const now = ctx.currentTime;
-                const duration = 3.8;
+                const duration = 4.7;
                 const bufferSize = Math.floor(ctx.sampleRate * duration);
                 const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
                 const data = buffer.getChannelData(0);
@@ -2697,20 +2774,22 @@
                     data[i] = Math.random() * 2 - 1;
                 }
 
-                // Wind / Drone Swoop Layer
+                // Sweeping Wind / Banking Swoosh Layer
                 const windSrc = ctx.createBufferSource();
                 windSrc.buffer = buffer;
                 const windFilter = ctx.createBiquadFilter();
                 windFilter.type = 'bandpass';
-                windFilter.Q.value = 2.6;
-                windFilter.frequency.setValueAtTime(220, now);
-                windFilter.frequency.exponentialRampToValueAtTime(980, now + 2.1);
-                windFilter.frequency.exponentialRampToValueAtTime(340, now + duration);
+                windFilter.Q.value = 2.8;
+                windFilter.frequency.setValueAtTime(190, now);
+                windFilter.frequency.exponentialRampToValueAtTime(1080, now + 1.25); // Dive under roof truss
+                windFilter.frequency.exponentialRampToValueAtTime(520, now + 2.15);  // Mid-carve
+                windFilter.frequency.exponentialRampToValueAtTime(920, now + 2.95);  // Wide right banking apex
+                windFilter.frequency.exponentialRampToValueAtTime(260, now + duration); // Cushion settle at spot
 
                 const windGain = ctx.createGain();
                 windGain.gain.setValueAtTime(0.001, now);
-                windGain.gain.linearRampToValueAtTime(0.11, now + 1.4);
-                windGain.gain.linearRampToValueAtTime(0.15, now + 2.2);
+                windGain.gain.linearRampToValueAtTime(0.11, now + 1.1);
+                windGain.gain.linearRampToValueAtTime(0.15, now + 2.6);
                 windGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
                 windSrc.connect(windFilter);
@@ -2724,13 +2803,13 @@
                 crowdSrc.buffer = buffer;
                 const crowdFilter = ctx.createBiquadFilter();
                 crowdFilter.type = 'lowpass';
-                crowdFilter.frequency.setValueAtTime(380, now);
-                crowdFilter.frequency.linearRampToValueAtTime(920, now + 2.5);
-                crowdFilter.frequency.linearRampToValueAtTime(540, now + duration);
+                crowdFilter.frequency.setValueAtTime(340, now);
+                crowdFilter.frequency.linearRampToValueAtTime(980, now + 2.8);
+                crowdFilter.frequency.linearRampToValueAtTime(520, now + duration);
 
                 const crowdGain = ctx.createGain();
                 crowdGain.gain.setValueAtTime(0.001, now);
-                crowdGain.gain.linearRampToValueAtTime(0.08, now + 2.3);
+                crowdGain.gain.linearRampToValueAtTime(0.085, now + 2.5);
                 crowdGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
                 crowdSrc.connect(crowdFilter);
@@ -2787,7 +2866,7 @@
             } catch (e) {}
         }
 
-        /** Synthesizes rising crowd anticipation swell during run-up */
+        /** Synthesizes rising crowd anticipation swell during 680ms run-up */
         function playSoundRunupSwell() {
             if (!soundEnabled) return;
             try {
@@ -2795,7 +2874,7 @@
                 if (!ctx) return;
 
                 const now = ctx.currentTime;
-                const dur = 0.9;
+                const dur = 0.72;
                 const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
                 const ch = buf.getChannelData(0);
                 for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
@@ -2966,7 +3045,8 @@
 
         /**
          * Applies coordinated transforms to #pov-camera-rig and its 4 parallax depth layers
-         * so foreground turf/ball, goal/keeper, and distant Gallowgate stand separate in 3D space.
+         * so foreground penalty spot/ball, goal/keeper, mowed turf, and distant Gallowgate stand
+         * separate smoothly in 3D space during both the sweeping drone fly-in and the POV run-up.
          */
         function applyParallaxTransforms({
             rigX = 0,
@@ -2974,7 +3054,10 @@
             rigScale = 1,
             rigRoll = 0,
             rigTiltX = 0,
-            runupP = 0
+            runupP = 0,
+            swoopX = 0,
+            swoopY = 0,
+            swoopZ = 0
         }) {
             camState.lastRigRollDeg = rigRoll;
 
@@ -2984,37 +3067,114 @@
                 `rotate(${rigRoll.toFixed(3)}deg) ` +
                 `rotateX(${rigTiltX.toFixed(2)}deg)`;
 
-            // Multi-layer depth separation driven by run-up progress (0 -> 1)
+            // Multi-layer 3D depth separation:
+            // - runupP (0 -> 1) drives the forward sprint surge from standing POV into boot impact
+            // - swoopX/Y/Z drive differential horizontal/vertical/depth parallax during the S-curve drone fly-in
             const arenaH = arenaContainer.clientHeight || 600;
-            const farScale   = 1.00 + runupP * 0.11;
-            const farY       = -runupP * 6;
-            const pitchScale = 1.00 + runupP * 0.28;
-            const pitchY     = runupP * (arenaH * 0.055);
-            const goalScale  = 1.00 + runupP * 0.21;
-            const goalY      = runupP * (arenaH * 0.016);
-            // In standing-back POV stance (runupP = 0), ball sits slightly smaller & forward (0.86x),
-            // surging right up to the kicker's feet (1.24x) at contact!
-            const fgScale    = 0.86 + runupP * 0.38;
-            const fgY        = runupP * (arenaH * 0.105);
 
-            layerFar.style.transform        = `translate3d(0, ${farY.toFixed(2)}px, 0) scale(${farScale.toFixed(4)})`;
-            layerPitch.style.transform      = `translate3d(0, ${pitchY.toFixed(2)}px, 0) scale(${pitchScale.toFixed(4)})`;
-            layerGoal.style.transform       = `translate3d(0, ${goalY.toFixed(2)}px, 0) scale(${goalScale.toFixed(4)})`;
-            layerForeground.style.transform = `translate3d(0, ${fgY.toFixed(2)}px, 0) scale(${fgScale.toFixed(4)})`;
+            const farScale   = 1.00 + runupP * 0.11 + swoopZ * 0.16;
+            const farX       = swoopX * 0.24;
+            const farY       = -runupP * 6 + swoopY * 0.22;
+
+            const pitchScale = 1.00 + runupP * 0.28 + swoopZ * 0.36;
+            const pitchX     = swoopX * 0.72;
+            const pitchY     = runupP * (arenaH * 0.055) + swoopY * 0.68;
+
+            const goalScale  = 1.00 + runupP * 0.21 + swoopZ * 0.32;
+            const goalX      = swoopX * 0.86;
+            const goalY      = runupP * (arenaH * 0.016) + swoopY * 0.74;
+
+            // Foreground penalty spot & ball carve fastest across the frame in the drone turn,
+            // then surge right up to the kicker's feet (0.86x -> 1.24x) during the 4-stride run-up!
+            const fgScale    = Math.max(0.55, 0.86 + runupP * 0.38 + swoopZ * 0.52);
+            const fgX        = swoopX * 1.48;
+            const fgY        = runupP * (arenaH * 0.105) + swoopY * 1.24;
+
+            layerFar.style.transform        = `translate3d(${farX.toFixed(2)}px, ${farY.toFixed(2)}px, 0) scale(${farScale.toFixed(4)})`;
+            layerPitch.style.transform      = `translate3d(${pitchX.toFixed(2)}px, ${pitchY.toFixed(2)}px, 0) scale(${pitchScale.toFixed(4)})`;
+            layerGoal.style.transform       = `translate3d(${goalX.toFixed(2)}px, ${goalY.toFixed(2)}px, 0) scale(${goalScale.toFixed(4)})`;
+            layerForeground.style.transform = `translate3d(${fgX.toFixed(2)}px, ${fgY.toFixed(2)}px, 0) scale(${fgScale.toFixed(4)})`;
         }
 
         /* ======================================================================
-           5. FEATURE 1 — CINEMATIC AERIAL DRONE FLY-IN INTRO (4.0 SECONDS)
+           5. FEATURE 1 — SWOOPING 4.8s AERIAL DRONE FLY-IN TO THE PENALTY SPOT
+           Phase 1 (0–28%): High aerial dive + left bank (-10°) under roof truss
+           Phase 2 (28–68%): Low-altitude S-curve carve left → wide right (+11°) → centre
+           Phase 3 (68–100%): Wings level to 0° and settle right at the penalty spot POV
            ====================================================================== */
         let droneRafId = null;
         let droneStartTime = 0;
-        const DRONE_TOTAL_MS = 4000;
+        let droneBadgeSwapped = false;
+        let droneSpotPulsed = false;
+        const DRONE_TOTAL_MS = 4800;
+
+        function clamp01(v) {
+            return v < 0 ? 0 : (v > 1 ? 1 : v);
+        }
+
+        function smootherstep(edge0, edge1, x) {
+            const u = clamp01((x - edge0) / (edge1 - edge0));
+            return u * u * u * (u * (u * 6 - 15) + 10);
+        }
 
         function easeInOutCubic(t) {
             return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         }
-        function easeOutQuint(t) {
-            return 1 - Math.pow(1 - t, 5);
+
+        // Smooth C1 Catmull-Rom spline keyframes for the drone flight path:
+        // [t, panXRatio, altYRatio, rollDeg, tiltXDeg, swoopZ, runupP]
+        const DRONE_PATH_KEYS = [
+            [0.00, -0.14, -0.26,  -2.2, 16.0, -0.26, -0.14], // High above St. James' Park
+            [0.15, -0.76, -0.21, -10.4, 14.5, -0.22, -0.10], // Steep left dive under Gallowgate roof truss
+            [0.28, -0.88, -0.14,  -9.6, 11.4, -0.15, -0.05], // Swoop into stadium bowl on left flank
+            [0.42,  0.22, -0.07,   8.8,  7.0, -0.02,  0.07], // Carving low across the 18-yard box
+            [0.54,  0.94, -0.04,  11.2,  5.0,  0.09,  0.15], // Wide right banking apex (+11° roll!)
+            [0.68,  0.20, -0.03,  -4.8,  3.2,  0.04,  0.09], // Banking back left toward the centre line
+            [0.82, -0.12, -0.012, -1.5,  1.1,  0.01,  0.04], // Lining up directly behind the penalty spot
+            [0.93,  0.00,  0.010,  0.0,  0.0,  0.00,  0.02], // Cushioned athletic step-in settle at spot
+            [1.00,  0.00,  0.000,  0.0,  0.0,  0.00,  0.00]  // Locked at exact eye-level player POV
+        ];
+
+        /** Evaluates a smooth Cardinal/Catmull-Rom channel across DRONE_PATH_KEYS */
+        function sampleDronePath(t) {
+            const keys = DRONE_PATH_KEYS;
+            let idx = 0;
+            while (idx < keys.length - 2 && t > keys[idx + 1][0]) {
+                idx++;
+            }
+            const k0 = keys[Math.max(0, idx - 1)];
+            const k1 = keys[idx];
+            const k2 = keys[idx + 1];
+            const k3 = keys[Math.min(keys.length - 1, idx + 2)];
+
+            const span = k2[0] - k1[0] || 1;
+            const u = clamp01((t - k1[0]) / span);
+            const u2 = u * u;
+            const u3 = u2 * u;
+
+            const out = [0, 0, 0, 0, 0, 0];
+            for (let c = 1; c <= 6; c++) {
+                const p0 = k0[c], p1 = k1[c], p2 = k2[c], p3 = k3[c];
+                // Cardinal spline (tension = 0.5) for ultra-fluid aerial banking without overshoot
+                const m1 = 0.5 * (p2 - p0);
+                const m2 = 0.5 * (p3 - p1);
+                const h00 = 2 * u3 - 3 * u2 + 1;
+                const h10 = u3 - 2 * u2 + u;
+                const h01 = -2 * u3 + 3 * u2;
+                const h11 = u3 - u2;
+                out[c - 1] = h00 * p1 + h10 * m1 + h01 * p2 + h11 * m2;
+            }
+
+            // Guarantee zero residual offset at t = 1.00
+            const endDamp = 1 - smootherstep(0.94, 1.00, t);
+            return {
+                panXRatio: out[0] * endDamp,
+                altYRatio: out[1] * endDamp,
+                rollDeg:   out[2] * endDamp,
+                tiltXDeg:  out[3] * endDamp,
+                swoopZ:    out[4] * endDamp,
+                runupP:    out[5] * endDamp
+            };
         }
 
         function startDroneIntro() {
@@ -3034,17 +3194,33 @@
 
             isIntroPlaying = true;
             isShooting = true;
+            droneBadgeSwapped = false;
+            droneSpotPulsed = false;
             camState.mode = 'intro';
             camState.runupP = 0;
             camState.targetLookX = camState.targetLookY = camState.targetLookRoll = 0;
             camState.currLookX = camState.currLookY = camState.currLookRoll = 0;
 
-            // Show cinema letterbox bars, drone overlay, and skip button; hide HUD zones
+            // Reset Broadcast Card to Phase 1 Aerial Title
+            droneBroadcastKicker.textContent = "MATCHDAY LIVE • ST. JAMES' PARK";
+            droneBroadcastHeadline.textContent = "PENALTY SHOOTOUT — GALLOWGATE END";
+            droneBroadcastSub.textContent = "NEWCASTLE UNITED vs MANCHESTER UNITED • AERIAL APPROACH";
+            droneBroadcastCard.classList.remove('hidden');
+            droneBroadcastCard.style.opacity = '0';
+            droneBroadcastBody.style.opacity = '1';
+
+            // Show cinema letterbox bars, aerial drone overlay, and skip button; hide HUD zones
             arenaContainer.classList.remove('runup-cinema');
             arenaContainer.classList.add('intro-cinema');
             zonesContainer.classList.add('zones-hidden');
             droneOverlay.classList.remove('hidden');
             droneOverlay.style.opacity = '1';
+            droneSkyLayer.style.opacity = '1';
+            droneStadiumLayer.style.opacity = '1';
+            droneTrussLayer.style.opacity = '0';
+            droneSpeedVignette.style.opacity = '0';
+            droneLensFlare.style.opacity = '0';
+            penaltySpot.classList.remove('spot-settle-pulse');
             btnSkipIntro.classList.remove('hidden');
 
             bannerText.textContent = "ST. JAMES' PARK — AERIAL DRONE APPROACH TO THE GALLOWGATE END...";
@@ -3061,76 +3237,124 @@
             const elapsed = now - droneStartTime;
             const t = Math.min(1, elapsed / DRONE_TOTAL_MS);
 
-            // --- PHASE 1 (0.0s - 1.6s, t: 0 -> 0.40): High aerial approach over roof ---
-            // --- PHASE 2 (1.6s - 3.2s, t: 0.40 -> 0.80): Dive through roof into bowl ---
-            // --- PHASE 3 (3.2s - 4.0s, t: 0.80 -> 1.00): Glide & level into player POV ---
+            const arenaW = arenaContainer.clientWidth || 1000;
+            const arenaH = arenaContainer.clientHeight || 600;
+            const sweepAmp = Math.min(arenaW * 0.165, 175);
 
-            // 1. Broadcast Lower-Third Card entrance & fade
-            if (t < 0.08) {
-                const p = t / 0.08;
+            // Sample continuous 3-phase flight path
+            const cam = sampleDronePath(t);
+
+            // 1. Broadcast Lower-Third Badge (Transitions smoothly to "AERIAL CAM → PENALTY SPOT POV" in Phase 2)
+            if (t < 0.06) {
+                const p = smootherstep(0, 0.06, t);
                 droneBroadcastCard.style.opacity = p.toFixed(3);
-                droneBroadcastCard.style.transform = `translate3d(${(-26 * (1 - p)).toFixed(1)}px, 0, 0)`;
-            } else if (t < 0.56) {
+                droneBroadcastCard.style.transform = `translate3d(${(-24 * (1 - p)).toFixed(1)}px, 0, 0)`;
+            } else if (t < 0.78) {
                 droneBroadcastCard.style.opacity = '1';
                 droneBroadcastCard.style.transform = 'translate3d(0, 0, 0)';
-            } else if (t < 0.70) {
-                const p = (t - 0.56) / 0.14;
+
+                // Subtle brief text crossfade at t = 0.30 -> 0.36 as drone enters the bowl
+                if (t >= 0.29 && t < 0.34) {
+                    const fadeOut = 1 - smootherstep(0.29, 0.34, t);
+                    droneBroadcastBody.style.opacity = fadeOut.toFixed(3);
+                } else if (t >= 0.34 && !droneBadgeSwapped) {
+                    droneBadgeSwapped = true;
+                    droneBroadcastKicker.textContent = "AERIAL CAM → PENALTY SPOT POV";
+                    droneBroadcastHeadline.textContent = "SWOOPING TO THE PENALTY SPOT";
+                    droneBroadcastSub.textContent = "12 YARDS OUT • NEWCASTLE UNITED FIRST-PERSON POV";
+                    bannerText.textContent = "AERIAL CAM → DROPPING IN TO THE PENALTY SPOT...";
+                }
+                if (t >= 0.34 && t <= 0.40) {
+                    const fadeIn = smootherstep(0.34, 0.40, t);
+                    droneBroadcastBody.style.opacity = fadeIn.toFixed(3);
+                } else if (t > 0.40) {
+                    droneBroadcastBody.style.opacity = '1';
+                }
+            } else if (t < 0.90) {
+                const p = smootherstep(0.78, 0.90, t);
                 droneBroadcastCard.style.opacity = (1 - p).toFixed(3);
-                droneBroadcastCard.style.transform = `translate3d(${(-20 * p).toFixed(1)}px, 0, 0)`;
+                droneBroadcastCard.style.transform = `translate3d(${(-22 * p).toFixed(1)}px, 0, 0)`;
             } else {
                 droneBroadcastCard.style.opacity = '0';
             }
 
-            // 2. Aerial Drone Overlay Multi-Layer Zoom & Bank
-            const aerialZoom = 1.0 + easeInOutCubic(Math.min(1, t / 0.72)) * 2.15;
-            const skyScale = 1.0 + Math.min(1, t / 0.72) * 0.28;
-            const bankDeg = Math.sin(t * Math.PI * 1.45) * -2.6;
-            const diveY = easeInOutCubic(Math.min(1, t / 0.72)) * -125;
+            // 2. Phase 1 (0%–28% + smooth crossfade to 36%): Aerial Exterior Dive & Overhead Roof Truss Rush
+            if (t <= 0.38) {
+                const diveP = clamp01(t / 0.34);
+                const aerialZoom = 1.0 + easeInOutCubic(diveP) * 1.95;
+                const skyScale = 1.0 + diveP * 0.26;
+                const aerialBank = cam.rollDeg * 0.85;
+                const aerialShiftX = cam.panXRatio * (sweepAmp * 0.55);
+                const aerialDiveY = -easeInOutCubic(diveP) * 155;
 
-            droneSkyLayer.style.transform =
-                `translate3d(0, ${(diveY * 0.18).toFixed(1)}px, 0) scale(${skyScale.toFixed(4)}) rotate(${(bankDeg * 0.4).toFixed(2)}deg)`;
-            droneStadiumLayer.style.transform =
-                `translate3d(0, ${diveY.toFixed(1)}px, 0) scale(${aerialZoom.toFixed(4)}) rotate(${bankDeg.toFixed(2)}deg)`;
+                droneSkyLayer.style.transform =
+                    `translate3d(${(aerialShiftX * 0.3).toFixed(1)}px, ${(aerialDiveY * 0.2).toFixed(1)}px, 0) ` +
+                    `scale(${skyScale.toFixed(4)}) rotate(${(aerialBank * 0.42).toFixed(2)}deg)`;
+                droneStadiumLayer.style.transform =
+                    `translate3d(${aerialShiftX.toFixed(1)}px, ${aerialDiveY.toFixed(1)}px, 0) ` +
+                    `scale(${aerialZoom.toFixed(4)}) rotate(${aerialBank.toFixed(2)}deg)`;
 
-            // Roof Truss Overhang rushes rapidly overhead during Phase 2 dive
-            const trussP = Math.max(0, Math.min(1, (t - 0.22) / 0.46));
-            const trussScale = 1.0 + Math.pow(trussP, 1.7) * 3.1;
-            const trussY = -Math.pow(trussP, 1.5) * 260;
-            droneTrussLayer.style.transform =
-                `translate3d(0, ${trussY.toFixed(1)}px, 0) scale(${trussScale.toFixed(4)}) rotate(${(bankDeg * 1.3).toFixed(2)}deg)`;
-            droneTrussLayer.style.opacity = (1 - Math.max(0, (trussP - 0.55) / 0.45)).toFixed(3);
+                // Smooth crossfade from exterior aerial model into live 3D POV stadium bowl
+                const extOpacity = 1 - smootherstep(0.21, 0.34, t);
+                droneSkyLayer.style.opacity = extOpacity.toFixed(3);
+                droneStadiumLayer.style.opacity = extOpacity.toFixed(3);
 
-            // Smooth crossfade from aerial drone overlay into live 3D POV arena (t: 0.44 -> 0.72)
-            let overlayOpacity = 1;
-            if (t >= 0.44) {
-                overlayOpacity = 1 - easeInOutCubic(Math.min(1, (t - 0.44) / 0.28));
+                // Overhead Gallowgate Roof Truss Girder rushes dramatically past top of viewport!
+                const trussP = clamp01((t - 0.04) / 0.28);
+                const trussIn = smootherstep(0.04, 0.11, t);
+                const trussOut = 1 - smootherstep(0.26, 0.35, t);
+                const trussScale = 1.0 + Math.pow(trussP, 1.55) * 2.85;
+                const trussY = -42 + Math.pow(trussP, 1.45) * -235;
+                droneTrussLayer.style.transform =
+                    `translate3d(${(aerialShiftX * 1.35).toFixed(1)}px, ${trussY.toFixed(1)}px, 0) ` +
+                    `scale(${trussScale.toFixed(4)}) rotate(${(aerialBank * 1.25).toFixed(2)}deg)`;
+                droneTrussLayer.style.opacity = (trussIn * trussOut).toFixed(3);
+            } else {
+                droneOverlay.style.opacity = '0';
             }
-            droneOverlay.style.opacity = Math.max(0, overlayOpacity).toFixed(3);
 
-            // 3. Live Arena Camera Swoop-In (Starts elevated/pulled back -> swoops smoothly down into eye-level POV)
-            const arenaT = Math.max(0, Math.min(1, (t - 0.36) / 0.64));
-            const swoopEase = easeOutQuint(arenaT);
-            const inv = 1 - swoopEase;
-
-            const arenaH = arenaContainer.clientHeight || 600;
-            const rigScale = 0.80 + swoopEase * 0.20;
-            const rigY = -inv * (arenaH * 0.11);
-            const rigX = Math.sin(arenaT * Math.PI) * 14 * inv;
-            const rigRoll = -inv * 3.2;
-            const rigTiltX = inv * 11.5;
+            // 3. Live 3D Stadium Multi-Layer Parallax Rig (Active throughout Phase 2 S-Curve & Phase 3 Spot Settle)
+            const swoopX = -cam.panXRatio * sweepAmp;
+            const swoopY = -cam.altYRatio * (arenaH * 0.48);
+            const rigX   = -cam.panXRatio * (sweepAmp * 0.36);
+            const rigY   =  cam.altYRatio * (arenaH * 0.62);
+            // Slight zoom breath during low-altitude S-curve carve, landing right at 1.00x
+            const rigScale = 1.0 + cam.swoopZ * 0.24;
 
             applyParallaxTransforms({
                 rigX,
                 rigY,
                 rigScale,
-                rigRoll,
-                rigTiltX,
-                runupP: 0
+                rigRoll: cam.rollDeg,
+                rigTiltX: cam.tiltXDeg,
+                runupP: cam.runupP,
+                swoopX,
+                swoopY,
+                swoopZ: cam.swoopZ
             });
 
-            // Begin retracting letterbox bars gracefully in Phase 3 (t >= 0.80)
-            if (t >= 0.80) {
+            // 4. Dynamic Speed Vignette & Sweeping Floodlight Lens Flare
+            const speedIn  = smootherstep(0.08, 0.24, t);
+            const speedOut = 1 - smootherstep(0.68, 0.90, t);
+            const speedStrength = speedIn * speedOut;
+            droneSpeedVignette.style.opacity = (speedStrength * 0.72).toFixed(3);
+
+            const flareStrength = smootherstep(0.18, 0.32, t) * (1 - smootherstep(0.66, 0.86, t));
+            const flareX = cam.panXRatio * (sweepAmp * 1.65);
+            const flareY = cam.altYRatio * 140;
+            droneLensFlare.style.opacity = (flareStrength * 0.85).toFixed(3);
+            droneLensFlare.style.transform =
+                `translate3d(${flareX.toFixed(1)}px, ${flareY.toFixed(1)}px, 0) rotate(${(cam.rollDeg * 0.55).toFixed(2)}deg)`;
+
+            // 5. Phase 3 (68%–100%): Retract letterbox bars & pulse glowing penalty spot on arrival
+            if (t >= 0.79) {
                 arenaContainer.classList.remove('intro-cinema');
+            }
+            if (t >= 0.85 && !droneSpotPulsed) {
+                droneSpotPulsed = true;
+                penaltySpot.classList.remove('spot-settle-pulse');
+                void penaltySpot.offsetWidth;
+                penaltySpot.classList.add('spot-settle-pulse');
             }
 
             if (t < 1) {
@@ -3150,11 +3374,17 @@
             camState.mode = 'idle';
 
             droneOverlay.classList.add('hidden');
+            droneBroadcastCard.classList.add('hidden');
+            droneSpeedVignette.style.opacity = '0';
+            droneLensFlare.style.opacity = '0';
             btnSkipIntro.classList.add('hidden');
             arenaContainer.classList.remove('intro-cinema');
 
-            // Settle exact standing-back POV stance
-            applyParallaxTransforms({ rigX: 0, rigY: 0, rigScale: 1, rigRoll: 0, rigTiltX: 0, runupP: 0 });
+            // Settle exact eye-level player POV right behind the penalty spot
+            applyParallaxTransforms({
+                rigX: 0, rigY: 0, rigScale: 1, rigRoll: 0, rigTiltX: 0,
+                runupP: 0, swoopX: 0, swoopY: 0, swoopZ: 0
+            });
 
             // Fade in 5 HUD target zones & enable input
             zonesContainer.classList.remove('zones-hidden');
@@ -3411,9 +3641,9 @@
                 clickedBtn.classList.remove('target-locked');
             }, 160);
 
-            // 2. Start 4-Stride Animated First-Person Run-Up (850ms via RAF)
+            // 2. Start 4-Stride Animated First-Person Run-Up (680ms via RAF)
             camState.mode = 'runup';
-            const RUNUP_DURATION_MS = 850;
+            const RUNUP_DURATION_MS = 680;
             const runupStart = performance.now();
             const stepTriggered = [false, false, false, false];
             const stepThresholds = [0.22, 0.45, 0.68, 0.89];
