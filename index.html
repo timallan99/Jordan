@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Newcastle United 1v1 Penalty Shootout vs Man Utd</title>
+    <title>Newcastle United 1v1 Penalty Shootout vs Man Utd — Cinematic POV</title>
     <style>
         /* ==========================================================================
            DESIGN TOKENS & THEME VARIABLES (NIGHT MATCH vs. DAYLIGHT MATCH)
@@ -32,7 +32,7 @@
             --turf-a: #1d7a42;
             --turf-b: #176a38;
             --turf-edge: #114c28;
-            --pitch-vignette: rgba(3, 10, 20, 0.50);
+            --pitch-vignette: rgba(3, 10, 20, 0.54);
 
             /* HUD Target Controls */
             --hud-accent: #facc15;
@@ -43,6 +43,10 @@
             --hud-pill-border: #facc15;
             --hud-num-bg: #facc15;
             --hud-num-text: #090f1d;
+
+            /* Cinematic POV Atmosphere */
+            --pov-vignette: rgba(2, 6, 16, 0.62);
+            --lens-glare-opacity: 0.42;
         }
 
         /* Bright Daylight St. James' Park Theme */
@@ -70,7 +74,7 @@
             --turf-a: #249650;
             --turf-b: #1e8445;
             --turf-edge: #176635;
-            --pitch-vignette: rgba(10, 40, 20, 0.16);
+            --pitch-vignette: rgba(10, 40, 20, 0.18);
 
             /* HUD Target Controls */
             --hud-accent: #facc15;
@@ -81,6 +85,10 @@
             --hud-pill-border: #facc15;
             --hud-num-bg: #facc15;
             --hud-num-text: #0f172a;
+
+            /* Daylight POV Atmosphere */
+            --pov-vignette: rgba(12, 30, 18, 0.24);
+            --lens-glare-opacity: 0.16;
         }
 
         /* ==========================================================================
@@ -94,7 +102,6 @@
 
         html, body {
             width: 100%;
-            height: 100dvh;
             height: 100vh;
             overflow: hidden;
         }
@@ -143,7 +150,7 @@
             background: var(--header-bg);
             border-bottom: 2px solid var(--header-border);
             box-shadow: 0 6px 22px rgba(0, 0, 0, 0.3);
-            z-index: 50;
+            z-index: 80;
             transition: background 0.3s ease, border-color 0.3s ease;
         }
 
@@ -163,7 +170,7 @@
         }
 
         .header-inner {
-            max-width: 1360px;
+            max-width: 1380px;
             margin: 0 auto;
             padding: 7px 14px;
             display: flex;
@@ -173,7 +180,6 @@
             gap: 8px;
         }
 
-        /* Scoreboard Group */
         .scoreboard-group {
             display: flex;
             align-items: center;
@@ -291,11 +297,11 @@
             color: #f59e0b;
         }
 
-        /* Toolbar Controls (>= 48px Touch Targets, No Download Button) */
+        /* Toolbar Controls (>= 48px Touch Targets) */
         .toolbar-group {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             flex-wrap: wrap;
             margin-left: auto;
         }
@@ -342,7 +348,7 @@
         .ctrl-btn {
             min-height: 48px;
             min-width: 48px;
-            padding: 0 13px;
+            padding: 0 12px;
             border-radius: 12px;
             border: 1.5px solid var(--btn-border);
             background: var(--btn-bg);
@@ -381,6 +387,16 @@
             background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
         }
 
+        .ctrl-btn.btn-cinema {
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            border-color: #facc15;
+            color: #fde047;
+        }
+
+        .ctrl-btn.btn-cinema:hover {
+            background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+        }
+
         .ctrl-icon {
             font-size: 16px;
             line-height: 1;
@@ -401,7 +417,7 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
-            z-index: 40;
+            z-index: 75;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
         }
 
@@ -436,7 +452,7 @@
         }
 
         /* ==========================================================================
-           STADIUM ARENA, VECTOR BACKDROP & PERSPECTIVE PITCH
+           STADIUM ARENA, 3D POV CAMERA RIG & CINEMA LETTERBOXING
            ========================================================================== */
         .stadium-arena {
             position: relative;
@@ -449,17 +465,80 @@
             align-items: center;
             justify-content: flex-end;
             background: #040914;
+            perspective: 1100px;
+            perspective-origin: 50% 42%;
         }
 
-        /* Vector Stadium Backdrop (Pure CSS Night/Day Layer Switching for All Browsers) */
+        /* Widescreen Cinema Letterbox Bars (Intro & Run-Up Modes) */
+        .cinema-bar {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 0px;
+            background: #02040a;
+            z-index: 65;
+            pointer-events: none;
+            transition: height 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 0 24px rgba(0, 0, 0, 0.9);
+        }
+        .cinema-bar-top { top: 0; }
+        .cinema-bar-bottom { bottom: 0; }
+
+        .stadium-arena.intro-cinema .cinema-bar {
+            height: clamp(32px, 8.5vh, 66px);
+        }
+
+        .stadium-arena.runup-cinema .cinema-bar {
+            height: clamp(18px, 4.2vh, 30px);
+            transition: height 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* 3D First-Person POV Camera Rig (Drives Breathing, Look-Shift, Drone Landing, Run-Up & Shake) */
+        #pov-camera-rig {
+            position: absolute;
+            inset: 0;
+            transform-origin: 50% 46%;
+            will-change: transform;
+        }
+
+        /* Depth Parallax Layers */
+        .pov-layer {
+            position: absolute;
+            inset: 0;
+            transform-origin: 50% 46%;
+            will-change: transform;
+        }
+
+        #layer-far {
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        #layer-pitch {
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        #layer-goal {
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        #layer-foreground {
+            z-index: 38;
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           FAR LAYER: ST. JAMES' PARK GALLOWGATE END VECTOR BACKDROP + CROWD FLASHES
+           ========================================================================== */
         .stadium-backdrop {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 44%;
-            min-height: 190px;
-            z-index: 2;
+            top: -8%;
+            left: -8%;
+            width: 116%;
+            height: 53%;
+            min-height: 215px;
             pointer-events: none;
         }
 
@@ -469,7 +548,7 @@
             display: block;
         }
 
-        /* Pure CSS Night vs Day SVG Theme Controls (100% Compatible Across All Browsers) */
+        /* Pure CSS Night vs Day SVG Theme Controls */
         .svg-sky-day {
             opacity: 0;
             transition: opacity 0.4s ease;
@@ -510,32 +589,57 @@
         body.light-theme .svg-crowd-night { opacity: 0; }
         body.light-theme .svg-crowd-day { opacity: 1; }
 
-        /* Perspective Pitch Turf */
+        /* Animated Night-Match Crowd Camera Flashes */
+        .crowd-flash {
+            fill: #ffffff;
+            opacity: 0;
+            animation: crowdFlashAnim 4.5s infinite ease-in-out;
+        }
+        body.light-theme .crowd-flash {
+            display: none;
+        }
+        .cf-1 { animation-delay: 0.2s; animation-duration: 3.8s; }
+        .cf-2 { animation-delay: 1.4s; animation-duration: 5.1s; }
+        .cf-3 { animation-delay: 2.3s; animation-duration: 4.2s; }
+        .cf-4 { animation-delay: 0.8s; animation-duration: 6.0s; }
+        .cf-5 { animation-delay: 3.1s; animation-duration: 4.6s; }
+        .cf-6 { animation-delay: 1.9s; animation-duration: 3.5s; }
+        .cf-7 { animation-delay: 2.7s; animation-duration: 5.4s; }
+        .cf-8 { animation-delay: 0.5s; animation-duration: 4.9s; }
+
+        @keyframes crowdFlashAnim {
+            0%, 84%, 100% { opacity: 0; transform: scale(0.6); }
+            88%           { opacity: 0.95; transform: scale(1.4); }
+            93%           { opacity: 0.25; transform: scale(1.0); }
+        }
+
+        /* ==========================================================================
+           MID-FAR LAYER: PERSPECTIVE MOWED PITCH & FOREGROUND GRASS BLUR
+           ========================================================================== */
         .pitch-layer {
             position: absolute;
             top: 41%;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 5;
+            bottom: -14%;
+            left: -10%;
+            right: -10%;
             overflow: hidden;
             background: var(--turf-edge);
         }
 
-        /* Natural Mowed Grass Stripes with Perspective Depth */
+        /* Natural Mowed Grass Stripes with Sharp POV Perspective Depth */
         .pitch-turf {
             position: absolute;
             inset: 0;
             background: linear-gradient(
                 180deg,
-                var(--turf-b) 0%,   var(--turf-b) 8%,
-                var(--turf-a) 8%,   var(--turf-a) 17%,
-                var(--turf-b) 17%,  var(--turf-b) 27%,
-                var(--turf-a) 27%,  var(--turf-a) 39%,
-                var(--turf-b) 39%,  var(--turf-b) 53%,
-                var(--turf-a) 53%,  var(--turf-a) 69%,
-                var(--turf-b) 69%,  var(--turf-b) 86%,
-                var(--turf-a) 86%,  var(--turf-a) 100%
+                var(--turf-b) 0%,   var(--turf-b) 7%,
+                var(--turf-a) 7%,   var(--turf-a) 15%,
+                var(--turf-b) 15%,  var(--turf-b) 25%,
+                var(--turf-a) 25%,  var(--turf-a) 37%,
+                var(--turf-b) 37%,  var(--turf-b) 51%,
+                var(--turf-a) 51%,  var(--turf-a) 67%,
+                var(--turf-b) 67%,  var(--turf-b) 84%,
+                var(--turf-a) 84%,  var(--turf-a) 100%
             );
             transition: background 0.35s ease;
         }
@@ -545,8 +649,8 @@
             position: absolute;
             inset: 0;
             background:
-                radial-gradient(ellipse 68% 55% at 50% 32%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 70%),
-                radial-gradient(ellipse 100% 90% at 50% 50%, rgba(0, 0, 0, 0) 48%, var(--pitch-vignette) 100%);
+                radial-gradient(ellipse 68% 55% at 50% 30%, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 70%),
+                radial-gradient(ellipse 100% 90% at 50% 50%, rgba(0, 0, 0, 0) 44%, var(--pitch-vignette) 100%);
             pointer-events: none;
         }
 
@@ -560,36 +664,28 @@
             pointer-events: none;
         }
 
-        /* Glowing White Penalty Spot */
-        .penalty-spot {
+        /* Lower-Edge Blurred Foreground Grass Periphery (Enhances First-Person Depth) */
+        .pov-foreground-grass {
             position: absolute;
-            bottom: 17%;
-            left: 50%;
-            width: 34px;
-            height: 13px;
-            margin-left: -17px;
-            margin-bottom: -6.5px;
-            border-radius: 50%;
-            background: radial-gradient(ellipse at center, #ffffff 0%, #f1f5f9 72%, #cbd5e1 100%);
-            box-shadow:
-                0 0 14px rgba(255, 255, 255, 0.72),
-                0 0 0 6px rgba(15, 65, 30, 0.32),
-                0 2px 6px rgba(0, 0, 0, 0.45);
-            z-index: 12;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 15%;
+            background: linear-gradient(180deg, rgba(8, 42, 20, 0) 0%, rgba(6, 30, 14, 0.42) 65%, rgba(3, 15, 7, 0.78) 100%);
             pointer-events: none;
         }
 
         /* ==========================================================================
-           GOAL STAGE, 3D VECTOR GOAL FRAME, NET RIPPLE & TARGET HUD
+           GOAL LAYER: 3D VECTOR GOAL FRAME, NET RIPPLE, KEEPER & TARGET HUD
            ========================================================================== */
         .goal-stage {
             position: absolute;
-            top: clamp(16px, 5.5vh, 52px);
+            top: clamp(18px, 6.2vh, 56px);
             left: 50%;
             transform: translateX(-50%);
-            width: min(94vw, 680px);
-            height: clamp(210px, 42vh, 305px);
-            z-index: 20;
+            width: min(92vw, 660px);
+            height: clamp(202px, 40.5vh, 296px);
+            pointer-events: auto;
         }
 
         .goal-frame {
@@ -613,14 +709,14 @@
 
         @keyframes netRipple {
             0%   { transform: scale(1, 1) translateY(0); }
-            22%  { transform: scale(1.024, 0.982) translateY(-3px); }
-            45%  { transform: scale(0.99, 1.014) translateY(2px); }
-            70%  { transform: scale(1.01, 0.995) translateY(-1px); }
+            22%  { transform: scale(1.032, 0.976) translateY(-4px); }
+            46%  { transform: scale(0.986, 1.018) translateY(3px); }
+            72%  { transform: scale(1.014, 0.992) translateY(-1.5px); }
             100% { transform: scale(1, 1) translateY(0); }
         }
 
         .net-rippling {
-            animation: netRipple 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+            animation: netRipple 0.58s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         /* ==========================================================================
@@ -637,6 +733,12 @@
             grid-template-rows: 1fr 1fr;
             gap: 10px;
             z-index: 35;
+            transition: opacity 0.35s ease;
+        }
+
+        .target-zones-grid.zones-hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
         .target-tl { grid-column: 1; grid-row: 1; }
@@ -659,10 +761,17 @@
             outline: none;
             min-height: 48px;
             padding: 6px;
-            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, opacity 0.2s ease;
+            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, opacity 0.22s ease;
         }
 
-        /* Crisp Gold Corner Brackets */
+        /* Target Lock Highlight Flash on Kick Initiation */
+        .target-btn.target-locked {
+            border-color: #ffffff !important;
+            box-shadow: 0 0 28px rgba(250, 204, 21, 0.95), inset 0 0 24px rgba(250, 204, 21, 0.36) !important;
+            transform: scale(1.06) !important;
+            opacity: 1 !important;
+        }
+
         .target-btn .corner {
             position: absolute;
             width: 15px;
@@ -675,7 +784,6 @@
         .target-btn .c-bl { bottom: -2px; left: -2px; border-bottom: 3px solid var(--hud-accent); border-left: 3px solid var(--hud-accent); border-bottom-left-radius: 8px; }
         .target-btn .c-br { bottom: -2px; right: -2px; border-bottom: 3px solid var(--hud-accent); border-right: 3px solid var(--hud-accent); border-bottom-right-radius: 8px; }
 
-        /* Subtle Pulsing Target Ring */
         .target-ring {
             width: 24px;
             height: 24px;
@@ -702,7 +810,6 @@
             box-shadow: 0 0 8px var(--hud-accent-glow);
         }
 
-        /* High-Contrast Numbered Pill Badge */
         .hud-target-pill {
             background: var(--hud-pill-bg);
             color: var(--hud-pill-text);
@@ -781,9 +888,9 @@
             position: absolute;
             bottom: 4.5%;
             left: 50%;
-            width: clamp(130px, 24%, 168px);
-            height: clamp(150px, 68%, 205px);
-            margin-left: calc(clamp(130px, 24%, 168px) / -2);
+            width: clamp(128px, 24%, 166px);
+            height: clamp(148px, 68%, 202px);
+            margin-left: calc(clamp(128px, 24%, 166px) / -2);
             transform: translate3d(0, 0, 0) rotate(0deg);
             transform-origin: bottom center;
             z-index: 25;
@@ -801,7 +908,7 @@
 
         @keyframes keeperReady {
             0%, 100% { transform: translateY(0px) scaleY(1); }
-            50%      { transform: translateY(2px) scaleY(0.985); }
+            50%      { transform: translateY(2.2px) scaleY(0.985); }
         }
 
         .keeper-body-idle {
@@ -814,39 +921,67 @@
         }
 
         /* ==========================================================================
-           CRISP MODERN MATCH FOOTBALL & DYNAMIC CONTACT SHADOW
+           FOREGROUND LAYER: PENALTY SPOT, MATCH BALL, SHADOW & TURF SPRAY
+           (Positioned slightly forward along the runway in initial POV stance)
            ========================================================================== */
+        .penalty-spot {
+            position: absolute;
+            bottom: 22.5%;
+            left: 50%;
+            width: 34px;
+            height: 12px;
+            margin-left: -17px;
+            margin-bottom: -6px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, #ffffff 0%, #f1f5f9 72%, #cbd5e1 100%);
+            box-shadow:
+                0 0 14px rgba(255, 255, 255, 0.72),
+                0 0 0 6px rgba(15, 65, 30, 0.32),
+                0 2px 6px rgba(0, 0, 0, 0.45);
+            z-index: 40;
+            pointer-events: none;
+        }
+
         .football-shadow {
             position: absolute;
-            bottom: 17%;
+            bottom: 22.5%;
             left: 50%;
             width: 72px;
             height: 20px;
             margin-left: -36px;
             margin-bottom: -10px;
-            background: radial-gradient(ellipse at center, rgba(4, 20, 10, 0.82) 0%, rgba(4, 20, 10, 0.38) 56%, rgba(0, 0, 0, 0) 78%);
+            background: radial-gradient(ellipse at center, rgba(4, 20, 10, 0.84) 0%, rgba(4, 20, 10, 0.38) 56%, rgba(0, 0, 0, 0) 78%);
             border-radius: 50%;
             transform: translate3d(0, 0, 0) scale(1);
             transform-origin: center center;
             transition: transform 0.52s cubic-bezier(0.2, 0.8, 0.25, 1), opacity 0.52s ease-out;
-            z-index: 40;
+            z-index: 41;
+            pointer-events: none;
+        }
+
+        #turf-spray-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 42;
             pointer-events: none;
         }
 
         .football-actor {
             position: absolute;
-            bottom: 17%;
+            bottom: 22.5%;
             left: 50%;
-            width: 78px;
-            height: 78px;
-            margin-left: -39px;
-            margin-bottom: -16px;
+            width: 74px;
+            height: 74px;
+            margin-left: -37px;
+            margin-bottom: -14px;
             transform: translate3d(0, 0, 0) scale(1);
             transform-origin: center center;
             transition: transform 0.52s cubic-bezier(0.2, 0.8, 0.25, 1);
             z-index: 45;
             pointer-events: none;
-            filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.42));
+            filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.44));
         }
 
         .football-inner-spinner {
@@ -865,6 +1000,251 @@
         }
 
         /* ==========================================================================
+           FIRST-PERSON KICKING LEG & PRO FOOTBALL BOOT OVERLAY
+           ========================================================================== */
+        #pov-kicking-boot {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            width: clamp(200px, 32vw, 320px);
+            height: clamp(220px, 36vh, 340px);
+            margin-left: -20px;
+            z-index: 48;
+            pointer-events: none;
+            opacity: 0;
+            transform-origin: 72% 90%;
+            transform: translate3d(130px, 240px, 0) rotate(32deg) scale(0.95);
+            will-change: transform, opacity;
+            filter: drop-shadow(0 18px 22px rgba(0, 0, 0, 0.65));
+        }
+
+        #pov-kicking-boot svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            overflow: visible;
+        }
+
+        /* ==========================================================================
+           CINEMATIC PERIPHERAL VIGNETTE, LENS GLARE & GOAL FLASH
+           ========================================================================== */
+        #pov-vignette-lens {
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 96% 88% at 50% 48%, rgba(0, 0, 0, 0) 56%, var(--pov-vignette) 100%);
+        }
+
+        /* Subtle Floodlight Lens Glare Streaks at Top Corners */
+        .lens-streak {
+            position: absolute;
+            top: -10px;
+            width: 34vw;
+            max-width: 440px;
+            height: 140px;
+            opacity: var(--lens-glare-opacity);
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .lens-streak-left {
+            left: -40px;
+            background: radial-gradient(ellipse at 18% 12%, rgba(224, 242, 254, 0.52) 0%, rgba(254, 249, 195, 0.16) 36%, rgba(255, 255, 255, 0) 74%);
+            transform: rotate(14deg);
+        }
+        .lens-streak-right {
+            right: -40px;
+            background: radial-gradient(ellipse at 82% 12%, rgba(224, 242, 254, 0.52) 0%, rgba(254, 249, 195, 0.16) 36%, rgba(255, 255, 255, 0) 74%);
+            transform: rotate(-14deg);
+        }
+
+        /* Celebratory Floodlight Pulse Flash on Goal */
+        #goal-flash-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 52;
+            pointer-events: none;
+            opacity: 0;
+            background: radial-gradient(circle at 50% 34%, rgba(254, 249, 195, 0.68) 0%, rgba(250, 204, 21, 0.25) 45%, rgba(255, 255, 255, 0) 80%);
+        }
+
+        @keyframes goalFloodlightFlash {
+            0%   { opacity: 0; }
+            18%  { opacity: 0.92; }
+            55%  { opacity: 0.35; }
+            100% { opacity: 0; }
+        }
+
+        .goal-flashing {
+            animation: goalFloodlightFlash 0.65s ease-out forwards;
+        }
+
+        /* ==========================================================================
+           FEATURE 1: CINEMATIC AERIAL DRONE FLY-IN INTRO OVERLAY
+           ========================================================================== */
+        #drone-intro-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 60;
+            overflow: hidden;
+            pointer-events: none;
+            background: #030712;
+            will-change: opacity;
+        }
+
+        body.light-theme #drone-intro-overlay {
+            background: #2589d8;
+        }
+
+        .drone-layer {
+            position: absolute;
+            inset: -8%;
+            width: 116%;
+            height: 116%;
+            transform-origin: 50% 50%;
+            will-change: transform, opacity;
+        }
+
+        .drone-layer svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Night vs Day Styles for Drone Overlay */
+        .drone-day-only { opacity: 0; transition: opacity 0.35s ease; }
+        .drone-night-only { opacity: 1; transition: opacity 0.35s ease; }
+        body.light-theme .drone-day-only { opacity: 1; }
+        body.light-theme .drone-night-only { opacity: 0.14; }
+
+        .drone-roof-metal { fill: #e2e8f0; }
+        .drone-roof-shadow { fill: #334155; }
+        body.light-theme .drone-roof-metal { fill: #ffffff; }
+        body.light-theme .drone-roof-shadow { fill: #64748b; }
+
+        /* Broadcast Matchday Lower-Third Card during Drone Intro */
+        #drone-broadcast-card {
+            position: absolute;
+            left: clamp(16px, 4vw, 48px);
+            bottom: clamp(50px, 12vh, 96px);
+            z-index: 62;
+            display: flex;
+            align-items: stretch;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(7, 13, 25, 0.90);
+            border: 1.5px solid rgba(250, 204, 21, 0.58);
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transform: translate3d(-24px, 0, 0);
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+
+        .broadcast-card-stripes {
+            width: 10px;
+            background: repeating-linear-gradient(
+                180deg,
+                #090d16 0px,
+                #090d16 8px,
+                #ffffff 8px,
+                #ffffff 16px
+            );
+            flex-shrink: 0;
+        }
+
+        .broadcast-card-body {
+            padding: 10px 18px 11px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .broadcast-live-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .live-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+            animation: livePulse 1.1s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%      { opacity: 0.45; transform: scale(0.8); }
+        }
+
+        .broadcast-kicker {
+            font-size: clamp(10px, 1.5vw, 12px);
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            color: #facc15;
+            text-transform: uppercase;
+        }
+
+        .broadcast-headline {
+            font-size: clamp(15px, 2.5vw, 22px);
+            font-weight: 900;
+            letter-spacing: 0.04em;
+            color: #ffffff;
+            line-height: 1.1;
+            text-transform: uppercase;
+        }
+
+        .broadcast-sub {
+            font-size: clamp(11px, 1.4vw, 13px);
+            font-weight: 700;
+            color: #cbd5e1;
+            letter-spacing: 0.05em;
+        }
+
+        /* Accessible Skip Intro Button (>= 48px Height) */
+        #btn-skip-intro {
+            position: absolute;
+            right: clamp(16px, 3.5vw, 38px);
+            bottom: clamp(46px, 11vh, 88px);
+            z-index: 70;
+            min-height: 48px;
+            padding: 0 20px;
+            border-radius: 999px;
+            border: 2px solid rgba(250, 204, 21, 0.85);
+            background: rgba(7, 13, 25, 0.88);
+            color: #fde047;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+            transition: transform 0.14s ease, background-color 0.18s ease, color 0.18s ease;
+        }
+
+        #btn-skip-intro:hover,
+        #btn-skip-intro:focus-visible {
+            background: #facc15;
+            color: #090f1d;
+            outline: none;
+            transform: scale(1.04);
+        }
+
+        #btn-skip-intro:active {
+            transform: scale(0.96);
+        }
+
+        /* ==========================================================================
            PITCH-LEVEL NEXT KICK ACTION BAR
            ========================================================================== */
         #gameplay-prompt-bar {
@@ -872,12 +1252,14 @@
             width: 100%;
             max-width: 560px;
             padding: 0 16px 14px;
-            z-index: 48;
+            z-index: 55;
             display: flex;
             justify-content: center;
+            pointer-events: none;
         }
 
         .btn-pitch-next {
+            pointer-events: auto;
             min-height: 56px;
             padding: 12px 34px;
             border-radius: 18px;
@@ -940,7 +1322,6 @@
             gap: 10px;
         }
 
-        /* Compact Broadcast Banner Above Cinema Video */
         #modal-banner {
             width: 100%;
             display: flex;
@@ -1007,7 +1388,6 @@
             border-radius: 999px;
         }
 
-        /* Cinema-Sized 16:9 Broadcast Video Frame */
         .video-frame {
             position: relative;
             width: min(94vw, 1200px, calc((100dvh - 180px) * 16 / 9));
@@ -1022,14 +1402,12 @@
             justify-content: center;
         }
 
-        /* Balanced Compact Card Width for Keeper Saves */
         .video-frame.frame-save {
             width: min(92vw, 640px);
             max-width: 640px;
             border-color: #ef4444;
         }
 
-        /* Uncropped Fit for Both 16:9 and Classic 4:3 Clips */
         #goal-video {
             width: 100%;
             height: 100%;
@@ -1038,7 +1416,6 @@
             display: block;
         }
 
-        /* Graceful Automatic Fallback Card */
         .video-fallback {
             position: absolute;
             inset: 0;
@@ -1113,7 +1490,6 @@
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         }
 
-        /* Prominent Next Kick CTA Button */
         .modal-actions {
             width: 100%;
             display: flex;
@@ -1158,7 +1534,7 @@
         /* ==========================================================================
            RESPONSIVE ADAPTATIONS FOR TABLETS & MOBILE DEVICES
            ========================================================================== */
-        @media (max-width: 900px) {
+        @media (max-width: 980px) {
             .btn-text-desktop {
                 display: none;
             }
@@ -1207,18 +1583,25 @@
                 height: 18px;
             }
             .football-actor {
-                width: 66px;
-                height: 66px;
-                margin-left: -33px;
+                width: 64px;
+                height: 64px;
+                margin-left: -32px;
             }
             .football-shadow {
-                width: 62px;
-                margin-left: -31px;
+                width: 60px;
+                margin-left: -30px;
             }
             .btn-modal-next {
                 width: 100%;
                 max-width: 340px;
                 padding: 12px 24px;
+            }
+            #drone-broadcast-card {
+                max-width: calc(100vw - 32px);
+                bottom: 98px;
+            }
+            #btn-skip-intro {
+                bottom: 42px;
             }
         }
 
@@ -1304,7 +1687,7 @@
                 </div>
             </div>
 
-            <!-- Controls (Difficulty, Sound, Theme, Fullscreen) -->
+            <!-- Controls (Difficulty, Drone Intro Replay, Sound, Theme, Fullscreen) -->
             <div class="toolbar-group">
                 <div class="difficulty-wrap">
                     <label for="select-difficulty" class="difficulty-label">
@@ -1317,6 +1700,11 @@
                         <option value="hard">Hard (45% goals)</option>
                     </select>
                 </div>
+
+                <button id="btn-replay-intro" class="ctrl-btn btn-cinema" type="button" aria-label="Replay Cinematic Stadium Drone Intro">
+                    <span class="ctrl-icon" aria-hidden="true">🎬</span>
+                    <span class="btn-text-desktop">Drone</span>
+                </button>
 
                 <button id="btn-toggle-sound" class="ctrl-btn" type="button" aria-label="Toggle Sound Effects">
                     <span id="sound-icon" class="ctrl-icon" aria-hidden="true">🔊</span>
@@ -1341,508 +1729,778 @@
          ====================================================================== -->
     <div class="status-ticker" role="status" aria-live="polite">
         <span class="ticker-stripes" aria-hidden="true"></span>
-        <span id="banner-text">ST. JAMES' PARK — TAP ANY ZONE ON THE GOAL TO SHOOT!</span>
+        <span id="banner-text">ST. JAMES' PARK — DRONE APPROACH TO THE GALLOWGATE END...</span>
         <span class="ticker-stripes" aria-hidden="true"></span>
     </div>
 
     <!-- ======================================================================
-         MAIN STADIUM ARENA
+         MAIN STADIUM ARENA (3D POV CAMERA RIG + DRONE FLY-IN + CINEMA BARS)
          ====================================================================== -->
-    <main class="stadium-arena" id="arena-container">
+    <main class="stadium-arena intro-cinema" id="arena-container">
 
-        <!-- 1. ST. JAMES' PARK GALLOWGATE END VECTOR BACKDROP -->
-        <div class="stadium-backdrop" aria-hidden="true">
-            <svg viewBox="0 0 1440 340" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <!-- Night Sky Gradient -->
-                    <linearGradient id="skyNightGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%"   stop-color="#040914"/>
-                        <stop offset="60%"  stop-color="#0c1932"/>
-                        <stop offset="100%" stop-color="#182b4d"/>
-                    </linearGradient>
+        <!-- Cinematic Widescreen Letterbox Bars -->
+        <div class="cinema-bar cinema-bar-top" aria-hidden="true"></div>
+        <div class="cinema-bar cinema-bar-bottom" aria-hidden="true"></div>
 
-                    <!-- Daylight Sky Gradient -->
-                    <linearGradient id="skyDayGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%"   stop-color="#2589d8"/>
-                        <stop offset="58%"  stop-color="#60b6f2"/>
-                        <stop offset="100%" stop-color="#bae6fd"/>
-                    </linearGradient>
+        <!-- ==================================================================
+             3D FIRST-PERSON POV CAMERA RIG (ALL PARALLAX DEPTH LAYERS)
+             ================================================================== -->
+        <div id="pov-camera-rig">
 
-                    <!-- Floodlight Light Cones -->
-                    <linearGradient id="beamLeft" x1="0.15" y1="0" x2="0.65" y2="1">
-                        <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.32"/>
-                        <stop offset="55%"  stop-color="#e0f2fe" stop-opacity="0.09"/>
-                        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-                    </linearGradient>
-                    <linearGradient id="beamRight" x1="0.85" y1="0" x2="0.35" y2="1">
-                        <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.32"/>
-                        <stop offset="55%"  stop-color="#e0f2fe" stop-opacity="0.09"/>
-                        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-                    </linearGradient>
-
-                    <!-- Daylight Sun Glow -->
-                    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%"   stop-color="#fef9c3" stop-opacity="0.95"/>
-                        <stop offset="40%"  stop-color="#fde047" stop-opacity="0.36"/>
-                        <stop offset="100%" stop-color="#fde047" stop-opacity="0"/>
-                    </radialGradient>
-
-                    <!-- Stylized Crowd Pattern (Night Mode) -->
-                    <pattern id="crowdNight" width="24" height="16" patternUnits="userSpaceOnUse">
-                        <rect width="24" height="16" fill="#0b1120"/>
-                        <circle cx="5"  cy="5"  r="2.4" fill="#e2e8f0" opacity="0.72"/>
-                        <circle cx="13" cy="6"  r="2.3" fill="#64748b" opacity="0.58"/>
-                        <circle cx="20" cy="4"  r="2.4" fill="#e2e8f0" opacity="0.65"/>
-                        <circle cx="8"  cy="12" r="2.2" fill="#64748b" opacity="0.50"/>
-                        <circle cx="16" cy="12" r="2.5" fill="#f8fafc" opacity="0.76"/>
-                        <circle cx="22" cy="13" r="1.8" fill="#facc15" opacity="0.45"/>
-                    </pattern>
-
-                    <!-- Stylized Crowd Pattern (Daylight Mode) -->
-                    <pattern id="crowdDay" width="24" height="16" patternUnits="userSpaceOnUse">
-                        <rect width="24" height="16" fill="#1e293b"/>
-                        <circle cx="5"  cy="5"  r="2.4" fill="#ffffff" opacity="0.82"/>
-                        <circle cx="13" cy="6"  r="2.3" fill="#94a3b8" opacity="0.68"/>
-                        <circle cx="20" cy="4"  r="2.4" fill="#ffffff" opacity="0.74"/>
-                        <circle cx="8"  cy="12" r="2.2" fill="#94a3b8" opacity="0.58"/>
-                        <circle cx="16" cy="12" r="2.5" fill="#ffffff" opacity="0.84"/>
-                        <circle cx="22" cy="13" r="1.8" fill="#facc15" opacity="0.58"/>
-                    </pattern>
-
-                    <!-- Pitchside LED Black & White Stripes -->
-                    <pattern id="ledToonStripes" width="20" height="36" patternUnits="userSpaceOnUse">
-                        <rect x="0"  y="0" width="10" height="36" fill="#090d16"/>
-                        <rect x="10" y="0" width="10" height="36" fill="#f8fafc"/>
-                    </pattern>
-                </defs>
-
-                <!-- Night Sky + Daylight Sky Layer -->
-                <rect x="0" y="0" width="1440" height="340" fill="url(#skyNightGrad)"/>
-                <rect class="svg-sky-day" x="0" y="0" width="1440" height="340" fill="url(#skyDayGrad)"/>
-
-                <!-- Daylight Sun & Clean Flat Clouds -->
-                <g class="svg-day-sun">
-                    <circle cx="1180" cy="66" r="76" fill="url(#sunGlow)"/>
-                    <circle cx="1180" cy="66" r="24" fill="#fef9c3"/>
-                </g>
-                <g class="svg-day-clouds" fill="#ffffff">
-                    <path d="M120,76 C120,62 134,54 148,57 C156,42 178,38 192,48 C206,44 224,52 226,68 C238,70 242,84 230,90 L126,90 C115,90 112,80 120,76 Z" opacity="0.88"/>
-                    <path d="M510,56 C510,45 522,38 534,41 C542,29 560,27 572,36 C585,33 598,42 599,54 C608,56 610,67 600,72 L516,72 C507,72 504,61 510,56 Z" opacity="0.72"/>
-                    <path d="M900,82 C900,70 914,62 927,65 C936,52 956,49 968,58 C982,55 997,64 998,77 C1008,79 1010,91 1000,96 L906,96 C896,96 893,86 900,82 Z" opacity="0.82"/>
-                </g>
-
-                <!-- Left & Right Floodlight Towers -->
-                <g>
-                    <!-- Left Tower -->
-                    <polygon points="105,305 128,62 146,62 162,305" fill="#1e293b"/>
-                    <line x1="120" y1="120" x2="152" y2="165" stroke="#334155" stroke-width="3"/>
-                    <line x1="150" y1="120" x2="118" y2="165" stroke="#334155" stroke-width="3"/>
-                    <rect x="92" y="34" width="90" height="32" rx="6" fill="#0f172a" stroke="#475569" stroke-width="2.5"/>
-                    <g fill="#fef9c3">
-                        <circle cx="107" cy="44" r="4"/><circle cx="122" cy="44" r="4"/><circle cx="137" cy="44" r="4"/><circle cx="152" cy="44" r="4"/><circle cx="167" cy="44" r="4"/>
-                        <circle cx="107" cy="56" r="4"/><circle cx="122" cy="56" r="4"/><circle cx="137" cy="56" r="4"/><circle cx="152" cy="56" r="4"/><circle cx="167" cy="56" r="4"/>
-                    </g>
-
-                    <!-- Right Tower -->
-                    <polygon points="1278,305 1294,62 1312,62 1335,305" fill="#1e293b"/>
-                    <line x1="1290" y1="120" x2="1322" y2="165" stroke="#334155" stroke-width="3"/>
-                    <line x1="1320" y1="120" x2="1288" y2="165" stroke="#334155" stroke-width="3"/>
-                    <rect x="1258" y="34" width="90" height="32" rx="6" fill="#0f172a" stroke="#475569" stroke-width="2.5"/>
-                    <g fill="#fef9c3">
-                        <circle cx="1273" cy="44" r="4"/><circle cx="1288" cy="44" r="4"/><circle cx="1303" cy="44" r="4"/><circle cx="1318" cy="44" r="4"/><circle cx="1333" cy="44" r="4"/>
-                        <circle cx="1273" cy="56" r="4"/><circle cx="1288" cy="56" r="4"/><circle cx="1303" cy="56" r="4"/><circle cx="1318" cy="56" r="4"/><circle cx="1333" cy="56" r="4"/>
-                    </g>
-                </g>
-
-                <!-- Gallowgate End Cantilevered Stand -->
-                <g>
-                    <path class="svg-stand-roof" d="M0,145 L180,108 L1260,108 L1440,145 L1440,168 L0,168 Z"/>
-                    <path class="svg-stand-truss" d="M180,108 Q720,76 1260,108" fill="none" stroke-width="6"/>
-                    <line class="svg-stand-truss" x1="0" y1="150" x2="1440" y2="150" stroke-width="3"/>
-
-                    <!-- Upper Tier Stylized Crowd -->
-                    <rect class="svg-crowd-night" x="0" y="168" width="1440" height="56" fill="url(#crowdNight)"/>
-                    <rect class="svg-crowd-day"   x="0" y="168" width="1440" height="56" fill="url(#crowdDay)"/>
-
-                    <!-- Tier Divider Fascia -->
-                    <rect class="svg-stand-wall" x="0" y="222" width="1440" height="16"/>
-                    <rect x="0" y="222" width="1440" height="2.5" fill="#334155"/>
-                    <text x="275"  y="234" fill="#cbd5e1" font-size="10.5" font-weight="900" letter-spacing="4" text-anchor="middle" font-family="system-ui, sans-serif">THE GALLOWGATE END</text>
-                    <text x="720"  y="234" fill="#facc15" font-size="10.5" font-weight="900" letter-spacing="4" text-anchor="middle" font-family="system-ui, sans-serif">ST. JAMES' PARK • NEWCASTLE UPON TYNE</text>
-                    <text x="1165" y="234" fill="#cbd5e1" font-size="10.5" font-weight="900" letter-spacing="4" text-anchor="middle" font-family="system-ui, sans-serif">HOWAY THE LADS</text>
-
-                    <!-- Lower Tier Stylized Crowd -->
-                    <rect class="svg-crowd-night" x="0" y="238" width="1440" height="66" fill="url(#crowdNight)"/>
-                    <rect class="svg-crowd-day"   x="0" y="238" width="1440" height="66" fill="url(#crowdDay)"/>
-
-                    <!-- Roof Depth Shadow -->
-                    <rect x="0" y="168" width="1440" height="24" fill="rgba(0,0,0,0.34)"/>
-                </g>
-
-                <!-- Soft Floodlight Light Cones (Night Mode) -->
-                <g class="svg-floodlight-beams">
-                    <polygon points="94,64 180,64 620,340 160,340" fill="url(#beamLeft)"/>
-                    <polygon points="1260,64 1346,64 1280,340 820,340" fill="url(#beamRight)"/>
-                </g>
-
-                <!-- Pitchside LED Perimeter Boards -->
-                <g>
-                    <rect x="0" y="302" width="1440" height="38" fill="#090d16"/>
-                    <rect x="0" y="302" width="1440" height="3" fill="#334155"/>
-
-                    <rect x="0"    y="306" width="150" height="32" fill="url(#ledToonStripes)"/>
-                    <rect x="435"  y="306" width="75"  height="32" fill="url(#ledToonStripes)"/>
-                    <rect x="930"  y="306" width="75"  height="32" fill="url(#ledToonStripes)"/>
-                    <rect x="1290" y="306" width="150" height="32" fill="url(#ledToonStripes)"/>
-
-                    <rect x="150" y="306" width="285" height="32" fill="#0f172a"/>
-                    <text x="292" y="327" fill="#ffffff" font-size="15.5" font-weight="900" letter-spacing="3" text-anchor="middle" font-family="system-ui, sans-serif">HOWAY THE LADS</text>
-
-                    <rect x="510" y="306" width="420" height="32" fill="#0b1120"/>
-                    <text x="720" y="327" fill="#facc15" font-size="16" font-weight="900" letter-spacing="3.5" text-anchor="middle" font-family="system-ui, sans-serif">ST JAMES' PARK • THE GALLOWGATE END</text>
-
-                    <rect x="1005" y="306" width="285" height="32" fill="#0f172a"/>
-                    <text x="1147" y="327" fill="#ffffff" font-size="15.5" font-weight="900" letter-spacing="3" text-anchor="middle" font-family="system-ui, sans-serif">HOWAY THE LADS</text>
-                </g>
-            </svg>
-        </div>
-
-        <!-- 2. PERSPECTIVE MOWED PITCH & CRISP WHITE MARKINGS -->
-        <div class="pitch-layer" aria-hidden="true">
-            <div class="pitch-turf"></div>
-            <div class="pitch-lighting"></div>
-
-            <!-- Perspective White Pitch Lines: Goal Line, 6-Yard Box, 18-Yard Box, Penalty Arc -->
-            <svg class="pitch-lines-svg" viewBox="0 0 1440 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                <line x1="0" y1="42" x2="1440" y2="42" stroke="rgba(255,255,255,0.92)" stroke-width="5"/>
-                <polygon points="445,42 995,42 1065,126 375,126" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="4.5" stroke-linejoin="round"/>
-                <polygon points="225,42 1215,42 1385,372 55,372" fill="none" stroke="rgba(255,255,255,0.90)" stroke-width="5" stroke-linejoin="round"/>
-                <path d="M 555,372 C 615,442 825,442 885,372" fill="none" stroke="rgba(255,255,255,0.90)" stroke-width="5" stroke-linecap="round"/>
-            </svg>
-        </div>
-
-        <!-- Glowing White Penalty Spot -->
-        <div class="penalty-spot" id="penalty-spot"></div>
-
-        <!-- 3. GOAL STAGE (3D GOAL FRAME + VECTOR GOALKEEPER + 5 TARGET ZONES) -->
-        <div class="goal-stage" id="goal-stage">
-            <div class="goal-frame">
-                <!-- 3D Metallic Goal Frame & Taut Diamond Netting -->
-                <svg class="goal-svg" viewBox="0 0 640 310" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <pattern id="net-mesh" width="16" height="16" patternUnits="userSpaceOnUse">
-                            <path d="M0 8 L8 0 L16 8 L8 16 Z" fill="none" stroke="rgba(255,255,255,0.44)" stroke-width="1.15"/>
-                            <path d="M8 0 L8 16 M0 8 L16 8" stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>
-                        </pattern>
-
-                        <linearGradient id="postVertGrad" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%"   stop-color="#94a3b8"/>
-                            <stop offset="22%"  stop-color="#ffffff"/>
-                            <stop offset="52%"  stop-color="#f1f5f9"/>
-                            <stop offset="82%"  stop-color="#cbd5e1"/>
-                            <stop offset="100%" stop-color="#64748b"/>
-                        </linearGradient>
-
-                        <linearGradient id="crossbarGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%"   stop-color="#ffffff"/>
-                            <stop offset="30%"  stop-color="#f8fafc"/>
-                            <stop offset="72%"  stop-color="#cbd5e1"/>
-                            <stop offset="100%" stop-color="#64748b"/>
-                        </linearGradient>
-
-                        <linearGradient id="netInteriorDepth" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%"   stop-color="#020617" stop-opacity="0.54"/>
-                            <stop offset="65%"  stop-color="#020617" stop-opacity="0.22"/>
-                            <stop offset="100%" stop-color="#020617" stop-opacity="0.06"/>
-                        </linearGradient>
-
-                        <linearGradient id="goalGroundShadow" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%"   stop-color="rgba(0,0,0,0.42)"/>
-                            <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
-                        </linearGradient>
-                    </defs>
-
-                    <!-- Goal Line Ground Shadow -->
-                    <polygon points="10,292 630,292 606,307 34,307" fill="url(#goalGroundShadow)"/>
-
-                    <!-- Netting & Rear Support Stanchions (Ripples on Goal) -->
-                    <g id="goal-net-group">
-                        <polygon points="62,48 578,48 612,286 28,286" fill="url(#netInteriorDepth)"/>
-                        <path d="M18,18 L62,48 L36,286" fill="none" stroke="#64748b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M622,18 L578,48 L604,286" fill="none" stroke="#64748b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        <line x1="62" y1="48" x2="578" y2="48" stroke="#475569" stroke-width="3.5"/>
-                        <line x1="36" y1="286" x2="604" y2="286" stroke="#334155" stroke-width="3"/>
-
-                        <polygon points="62,48 578,48 604,286 36,286" fill="url(#net-mesh)" stroke="rgba(255,255,255,0.32)" stroke-width="1.2"/>
-                        <polygon points="18,18 622,18 578,48 62,48" fill="url(#net-mesh)" stroke="rgba(255,255,255,0.34)" stroke-width="1.2"/>
-                        <polygon points="18,18 62,48 36,286 18,292" fill="url(#net-mesh)" stroke="rgba(255,255,255,0.36)" stroke-width="1.2"/>
-                        <polygon points="622,18 578,48 604,286 622,292" fill="url(#net-mesh)" stroke="rgba(255,255,255,0.36)" stroke-width="1.2"/>
-                    </g>
-
-                    <!-- Crisp White Goal Line -->
-                    <line x1="10" y1="292" x2="630" y2="292" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
-
-                    <!-- Tubular Metallic White Posts & Crossbar -->
-                    <rect x="10"  y="12" width="16"  height="282" rx="5" fill="url(#postVertGrad)" stroke="#475569" stroke-width="1.2"/>
-                    <rect x="614" y="12" width="16"  height="282" rx="5" fill="url(#postVertGrad)" stroke="#475569" stroke-width="1.2"/>
-                    <rect x="10"  y="8"  width="620" height="16"  rx="6" fill="url(#crossbarGrad)" stroke="#475569" stroke-width="1.2"/>
-
-                    <!-- Metallic Specular Highlights -->
-                    <line x1="15"  y1="24" x2="15"  y2="288" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="619" y1="24" x2="619" y2="288" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="22"  y1="12" x2="618" y2="12"  stroke="rgba(255,255,255,0.9)"  stroke-width="2.2" stroke-linecap="round"/>
-
-                    <!-- Elbow Joints -->
-                    <circle cx="18"  cy="16" r="8.5" fill="url(#crossbarGrad)" stroke="#475569" stroke-width="1.1"/>
-                    <circle cx="622" cy="16" r="8.5" fill="url(#crossbarGrad)" stroke="#475569" stroke-width="1.1"/>
-                </svg>
-
-                <!-- Athletic Flat-Vector Man Utd #1 Goalkeeper -->
-                <div id="goalkeeper" class="goalkeeper-actor">
-                    <svg viewBox="0 0 180 215" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- DEPTH LAYER 1 (FAR): ST. JAMES' PARK GALLOWGATE END BACKDROP -->
+            <div id="layer-far" class="pov-layer">
+                <div class="stadium-backdrop" aria-hidden="true">
+                    <svg viewBox="0 0 1440 340" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
                         <defs>
-                            <linearGradient id="gkJerseyGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%"   stop-color="#ef4444"/>
-                                <stop offset="52%"  stop-color="#dc2626"/>
-                                <stop offset="100%" stop-color="#991b1b"/>
+                            <!-- Night Sky Gradient -->
+                            <linearGradient id="skyNightGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%"   stop-color="#030712"/>
+                                <stop offset="56%"  stop-color="#0b1730"/>
+                                <stop offset="100%" stop-color="#182d52"/>
                             </linearGradient>
-                            <linearGradient id="gkSleeveGrad" x1="0" y1="0" x2="1" y2="1">
-                                <stop offset="0%"   stop-color="#dc2626"/>
-                                <stop offset="100%" stop-color="#991b1b"/>
+
+                            <!-- Daylight Sky Gradient -->
+                            <linearGradient id="skyDayGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%"   stop-color="#2589d8"/>
+                                <stop offset="58%"  stop-color="#60b6f2"/>
+                                <stop offset="100%" stop-color="#bae6fd"/>
                             </linearGradient>
-                            <linearGradient id="gkShortsGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%"   stop-color="#27272a"/>
-                                <stop offset="100%" stop-color="#09090b"/>
+
+                            <!-- Atmospheric Stadium Haze -->
+                            <radialGradient id="stadiumHaze" cx="50%" cy="68%" r="55%">
+                                <stop offset="0%"   stop-color="#93c5fd" stop-opacity="0.22"/>
+                                <stop offset="60%"  stop-color="#3b82f6" stop-opacity="0.06"/>
+                                <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+                            </radialGradient>
+
+                            <!-- Floodlight Light Cones -->
+                            <linearGradient id="beamLeft" x1="0.15" y1="0" x2="0.65" y2="1">
+                                <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.34"/>
+                                <stop offset="55%"  stop-color="#e0f2fe" stop-opacity="0.10"/>
+                                <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
                             </linearGradient>
-                            <linearGradient id="gkGloveLatex" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%"   stop-color="#fef08a"/>
-                                <stop offset="55%"  stop-color="#facc15"/>
-                                <stop offset="100%" stop-color="#ca8a04"/>
+                            <linearGradient id="beamRight" x1="0.85" y1="0" x2="0.35" y2="1">
+                                <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.34"/>
+                                <stop offset="55%"  stop-color="#e0f2fe" stop-opacity="0.10"/>
+                                <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
                             </linearGradient>
-                            <linearGradient id="gkSkinGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%"   stop-color="#ffedd5"/>
-                                <stop offset="65%"  stop-color="#fed7aa"/>
-                                <stop offset="100%" stop-color="#fdba74"/>
-                            </linearGradient>
+
+                            <!-- Daylight Sun Glow -->
+                            <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%"   stop-color="#fef9c3" stop-opacity="0.95"/>
+                                <stop offset="40%"  stop-color="#fde047" stop-opacity="0.36"/>
+                                <stop offset="100%" stop-color="#fde047" stop-opacity="0"/>
+                            </radialGradient>
+
+                            <!-- Stylized Crowd Pattern (Night Mode) -->
+                            <pattern id="crowdNight" width="24" height="16" patternUnits="userSpaceOnUse">
+                                <rect width="24" height="16" fill="#0b1120"/>
+                                <circle cx="5"  cy="5"  r="2.4" fill="#e2e8f0" opacity="0.72"/>
+                                <circle cx="13" cy="6"  r="2.3" fill="#64748b" opacity="0.58"/>
+                                <circle cx="20" cy="4"  r="2.4" fill="#e2e8f0" opacity="0.65"/>
+                                <circle cx="8"  cy="12" r="2.2" fill="#64748b" opacity="0.50"/>
+                                <circle cx="16" cy="12" r="2.5" fill="#f8fafc" opacity="0.76"/>
+                                <circle cx="22" cy="13" r="1.8" fill="#facc15" opacity="0.45"/>
+                            </pattern>
+
+                            <!-- Stylized Crowd Pattern (Daylight Mode) -->
+                            <pattern id="crowdDay" width="24" height="16" patternUnits="userSpaceOnUse">
+                                <rect width="24" height="16" fill="#1e293b"/>
+                                <circle cx="5"  cy="5"  r="2.4" fill="#ffffff" opacity="0.82"/>
+                                <circle cx="13" cy="6"  r="2.3" fill="#94a3b8" opacity="0.68"/>
+                                <circle cx="20" cy="4"  r="2.4" fill="#ffffff" opacity="0.74"/>
+                                <circle cx="8"  cy="12" r="2.2" fill="#94a3b8" opacity="0.58"/>
+                                <circle cx="16" cy="12" r="2.5" fill="#ffffff" opacity="0.84"/>
+                                <circle cx="22" cy="13" r="1.8" fill="#facc15" opacity="0.58"/>
+                            </pattern>
+
+                            <!-- Pitchside LED Black & White Stripes -->
+                            <pattern id="ledToonStripes" width="20" height="36" patternUnits="userSpaceOnUse">
+                                <rect x="0"  y="0" width="10" height="36" fill="#090d16"/>
+                                <rect x="10" y="0" width="10" height="36" fill="#f8fafc"/>
+                            </pattern>
                         </defs>
 
-                        <!-- Turf Contact Shadow -->
-                        <ellipse cx="90" cy="206" rx="54" ry="8.5" fill="rgba(4, 18, 8, 0.56)"/>
+                        <!-- Night Sky + Daylight Sky Layer -->
+                        <rect x="0" y="0" width="1440" height="340" fill="url(#skyNightGrad)"/>
+                        <rect class="svg-sky-day" x="0" y="0" width="1440" height="340" fill="url(#skyDayGrad)"/>
 
-                        <g class="keeper-body-idle">
-                            <!-- Knees / Lower Thighs -->
-                            <path d="M56,144 L73,144 L69,165 L52,165 Z" fill="#fdba74"/>
-                            <path d="M107,144 L124,144 L128,165 L111,165 Z" fill="#fdba74"/>
+                        <!-- Subtle Night Floodlight Atmospheric Haze -->
+                        <rect class="svg-floodlight-beams" x="0" y="0" width="1440" height="340" fill="url(#stadiumHaze)"/>
 
-                            <!-- Red Socks with White Turnover Bands -->
-                            <path d="M51,160 L70,160 L66,195 L48,195 Z" fill="#dc2626"/>
-                            <path d="M110,160 L129,160 L132,195 L114,195 Z" fill="#dc2626"/>
-                            <path d="M62,160 L70,160 L66,195 L59,195 Z" fill="#991b1b" opacity="0.5"/>
-                            <path d="M110,160 L118,160 L121,195 L114,195 Z" fill="#991b1b" opacity="0.5"/>
-                            <rect x="50"  y="159" width="21" height="6" rx="2" fill="#ffffff"/>
-                            <rect x="109" y="159" width="21" height="6" rx="2" fill="#ffffff"/>
-                            <rect x="50"  y="166" width="20" height="2.5" fill="#09090b"/>
-                            <rect x="110" y="166" width="20" height="2.5" fill="#09090b"/>
+                        <!-- Daylight Sun & Clean Flat Clouds -->
+                        <g class="svg-day-sun">
+                            <circle cx="1180" cy="66" r="76" fill="url(#sunGlow)"/>
+                            <circle cx="1180" cy="66" r="24" fill="#fef9c3"/>
+                        </g>
+                        <g class="svg-day-clouds" fill="#ffffff">
+                            <path d="M120,76 C120,62 134,54 148,57 C156,42 178,38 192,48 C206,44 224,52 226,68 C238,70 242,84 230,90 L126,90 C115,90 112,80 120,76 Z" opacity="0.88"/>
+                            <path d="M510,56 C510,45 522,38 534,41 C542,29 560,27 572,36 C585,33 598,42 599,54 C608,56 610,67 600,72 L516,72 C507,72 504,61 510,56 Z" opacity="0.72"/>
+                            <path d="M900,82 C900,70 914,62 927,65 C936,52 956,49 968,58 C982,55 997,64 998,77 C1008,79 1010,91 1000,96 L906,96 C896,96 893,86 900,82 Z" opacity="0.82"/>
+                        </g>
 
-                            <!-- Studded Football Boots -->
-                            <path d="M46,192 L67,192 L69,203 L37,203 C35,203 35,198 39,196 Z" fill="#0f172a"/>
-                            <path d="M38,203 L69,203 L69,206 L38,206 Z" fill="#f8fafc"/>
-                            <path d="M48,195 L57,198" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
-                            <rect x="41" y="206" width="4" height="2.5" rx="1" fill="#334155"/>
-                            <rect x="51" y="206" width="4" height="2.5" rx="1" fill="#334155"/>
-                            <rect x="62" y="206" width="4" height="2.5" rx="1" fill="#334155"/>
-
-                            <path d="M113,192 L134,192 L141,196 C145,198 145,203 143,203 L111,203 Z" fill="#0f172a"/>
-                            <path d="M111,203 L142,203 L142,206 L111,206 Z" fill="#f8fafc"/>
-                            <path d="M132,195 L123,198" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
-                            <rect x="114" y="206" width="4" height="2.5" rx="1" fill="#334155"/>
-                            <rect x="125" y="206" width="4" height="2.5" rx="1" fill="#334155"/>
-                            <rect x="135" y="206" width="4" height="2.5" rx="1" fill="#334155"/>
-
-                            <!-- Black Shorts with White Trim -->
-                            <path d="M54,113 L126,113 L133,149 C133,151 131,152 128,152 L101,152 L90,136 L79,152 L52,152 C49,152 47,151 47,149 Z" fill="url(#gkShortsGrad)" stroke="#09090b" stroke-width="1.5"/>
-                            <path d="M55,116 L49,149" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
-                            <path d="M125,116 L131,149" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
-
-                            <!-- Articulated Guard Arms -->
-                            <path d="M58,64 L32,84 L20,62" fill="none" stroke="url(#gkSleeveGrad)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M25,71 L20,61" fill="none" stroke="#0f172a" stroke-width="13" stroke-linecap="round"/>
-                            <path d="M122,64 L148,84 L160,62" fill="none" stroke="url(#gkSleeveGrad)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M155,71 L160,61" fill="none" stroke="#0f172a" stroke-width="13" stroke-linecap="round"/>
-
-                            <!-- Red Man Utd Keeper Jersey with Collar & #1 -->
-                            <path d="M56,55 C64,50 116,50 124,55 L130,82 L124,116 L56,116 L50,82 Z" fill="url(#gkJerseyGrad)" stroke="#7f1d1d" stroke-width="1.5"/>
-                            <path d="M54,70 L90,94 L126,70 L124,79 L90,103 L56,79 Z" fill="#7f1d1d" opacity="0.55"/>
-                            <path d="M62,55 L90,74 L118,55" fill="none" stroke="#facc15" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M77,52 L90,64 L103,52" fill="#0f172a"/>
-                            <path d="M77,52 L90,64 L103,52" fill="none" stroke="#facc15" stroke-width="2"/>
-
-                            <!-- MUFC Crest -->
-                            <path d="M104,67 L115,67 L115,74 C115,78 109.5,81 109.5,81 C109.5,81 104,78 104,74 Z" fill="#facc15" stroke="#7f1d1d" stroke-width="1"/>
-                            <circle cx="109.5" cy="73" r="2.8" fill="#dc2626"/>
-
-                            <!-- Squad #1 -->
-                            <text x="90" y="106" fill="#ffffff" font-size="29" font-weight="900" text-anchor="middle" font-family="system-ui, sans-serif">1</text>
-
-                            <!-- High-Visibility Neon Yellow Pro Keeper Gloves -->
-                            <g transform="translate(17, 50) rotate(-14)">
-                                <rect x="-8" y="8" width="16" height="7" rx="2" fill="#0f172a"/>
-                                <rect x="-5" y="10" width="10" height="3" rx="1" fill="#ffffff"/>
-                                <path d="M-11,8 L-12,-7 C-12,-11 -8,-12 -6,-9 L-6,-13 C-6,-16 -2,-16 -1,-13 L-1,-14 C0,-17 4,-17 5,-13 L5,-11 C7,-14 11,-12 10,-7 L10,8 Z" fill="url(#gkGloveLatex)" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
-                                <path d="M9,2 L15,-3 C18,-5 19,-1 16,2 L10,7 Z" fill="url(#gkGloveLatex)" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
-                                <path d="M-6,1 Q0,-3 6,1" fill="none" stroke="#0f172a" stroke-width="1.6" stroke-linecap="round"/>
+                        <!-- Left & Right Floodlight Towers -->
+                        <g>
+                            <!-- Left Tower -->
+                            <polygon points="105,305 128,62 146,62 162,305" fill="#1e293b"/>
+                            <line x1="120" y1="120" x2="152" y2="165" stroke="#334155" stroke-width="3"/>
+                            <line x1="150" y1="120" x2="118" y2="165" stroke="#334155" stroke-width="3"/>
+                            <rect x="92" y="34" width="90" height="32" rx="6" fill="#0f172a" stroke="#475569" stroke-width="2.5"/>
+                            <g fill="#fef9c3">
+                                <circle cx="107" cy="44" r="4"/><circle cx="122" cy="44" r="4"/><circle cx="137" cy="44" r="4"/><circle cx="152" cy="44" r="4"/><circle cx="167" cy="44" r="4"/>
+                                <circle cx="107" cy="56" r="4"/><circle cx="122" cy="56" r="4"/><circle cx="137" cy="56" r="4"/><circle cx="152" cy="56" r="4"/><circle cx="167" cy="56" r="4"/>
                             </g>
 
-                            <g transform="translate(163, 50) rotate(14)">
-                                <rect x="-8" y="8" width="16" height="7" rx="2" fill="#0f172a"/>
-                                <rect x="-5" y="10" width="10" height="3" rx="1" fill="#ffffff"/>
-                                <path d="M11,8 L12,-7 C12,-11 8,-12 6,-9 L6,-13 C6,-16 2,-16 1,-13 L1,-14 C0,-17 -4,-17 -5,-13 L-5,-11 C-7,-14 -11,-12 -10,-7 L-10,8 Z" fill="url(#gkGloveLatex)" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
-                                <path d="M-9,2 L-15,-3 C-18,-5 -19,-1 -16,2 L-10,7 Z" fill="url(#gkGloveLatex)" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
-                                <path d="M-6,1 Q0,-3 6,1" fill="none" stroke="#0f172a" stroke-width="1.6" stroke-linecap="round"/>
+                            <!-- Right Tower -->
+                            <polygon points="1278,305 1294,62 1312,62 1335,305" fill="#1e293b"/>
+                            <line x1="1290" y1="120" x2="1322" y2="165" stroke="#334155" stroke-width="3"/>
+                            <line x1="1320" y1="120" x2="1288" y2="165" stroke="#334155" stroke-width="3"/>
+                            <rect x="1258" y="34" width="90" height="32" rx="6" fill="#0f172a" stroke="#475569" stroke-width="2.5"/>
+                            <g fill="#fef9c3">
+                                <circle cx="1273" cy="44" r="4"/><circle cx="1288" cy="44" r="4"/><circle cx="1303" cy="44" r="4"/><circle cx="1318" cy="44" r="4"/><circle cx="1333" cy="44" r="4"/>
+                                <circle cx="1273" cy="56" r="4"/><circle cx="1288" cy="56" r="4"/><circle cx="1303" cy="56" r="4"/><circle cx="1318" cy="56" r="4"/><circle cx="1333" cy="56" r="4"/>
+                            </g>
+                        </g>
+
+                        <!-- Gallowgate End Cantilevered Stand -->
+                        <g>
+                            <path class="svg-stand-roof" d="M0,145 L180,108 L1260,108 L1440,145 L1440,168 L0,168 Z"/>
+                            <path class="svg-stand-truss" d="M180,108 Q720,76 1260,108" fill="none" stroke-width="6"/>
+                            <line class="svg-stand-truss" x1="0" y1="150" x2="1440" y2="150" stroke-width="3"/>
+
+                            <!-- Upper Tier Stylized Crowd -->
+                            <rect class="svg-crowd-night" x="0" y="168" width="1440" height="56" fill="url(#crowdNight)"/>
+                            <rect class="svg-crowd-day"   x="0" y="168" width="1440" height="56" fill="url(#crowdDay)"/>
+
+                            <!-- Tier Divider Fascia -->
+                            <rect class="svg-stand-wall" x="0" y="222" width="1440" height="16"/>
+                            <rect x="0" y="222" width="1440" height="2.5" fill="#334155"/>
+                            <text x="275"  y="234" fill="#cbd5e1" font-size="10.5" font-weight="900" letter-spacing="4" text-anchor="middle" font-family="system-ui, sans-serif">THE GALLOWGATE END</text>
+                            <text x="720"  y="234" fill="#facc15" font-size="10.5" font-weight="900" letter-spacing="4" text-anchor="middle" font-family="system-ui, sans-serif">ST. JAMES' PARK • NEWCASTLE UPON TYNE</text>
+                            <text x="1165" y="234" fill="#cbd5e1" font-size="10.5" font-weight="900" letter-spacing="4" text-anchor="middle" font-family="system-ui, sans-serif">HOWAY THE LADS</text>
+
+                            <!-- Lower Tier Stylized Crowd -->
+                            <rect class="svg-crowd-night" x="0" y="238" width="1440" height="66" fill="url(#crowdNight)"/>
+                            <rect class="svg-crowd-day"   x="0" y="238" width="1440" height="66" fill="url(#crowdDay)"/>
+
+                            <!-- Subtle Animated Night Crowd Camera Flashes -->
+                            <g>
+                                <circle class="crowd-flash cf-1" cx="220"  cy="192" r="3.2"/>
+                                <circle class="crowd-flash cf-2" cx="460"  cy="265" r="3.4"/>
+                                <circle class="crowd-flash cf-3" cx="640"  cy="184" r="3.0"/>
+                                <circle class="crowd-flash cf-4" cx="845"  cy="252" r="3.5"/>
+                                <circle class="crowd-flash cf-5" cx="1055" cy="195" r="3.2"/>
+                                <circle class="crowd-flash cf-6" cx="1220" cy="272" r="3.3"/>
+                                <circle class="crowd-flash cf-7" cx="345"  cy="255" r="2.8"/>
+                                <circle class="crowd-flash cf-8" cx="950"  cy="278" r="2.9"/>
                             </g>
 
-                            <!-- Head, Hair & Focused Expression -->
-                            <rect x="83" y="42" width="14" height="14" rx="4" fill="#fdba74"/>
-                            <circle cx="72" cy="32" r="3.5" fill="#fdba74"/>
-                            <circle cx="108" cy="32" r="3.5" fill="#fdba74"/>
-                            <path d="M73,27 C73,16 107,16 107,27 L106,36 C105,45 97,49 90,49 C83,49 75,45 74,36 Z" fill="url(#gkSkinGrad)" stroke="#ea580c" stroke-width="0.7"/>
-                            <path d="M72,28 C71,14 82,10 91,11 C102,11 109,16 108,28 C104,21 97,18 89,19 C81,19 76,22 72,28 Z" fill="#291508"/>
-                            <path d="M77,27 L85,29" stroke="#291508" stroke-width="2.1" stroke-linecap="round"/>
-                            <path d="M103,27 L95,29" stroke="#291508" stroke-width="2.1" stroke-linecap="round"/>
-                            <ellipse cx="82" cy="32.5" rx="2.7" ry="2.8" fill="#ffffff"/>
-                            <circle cx="82.4" cy="32.7" r="1.6" fill="#0f172a"/>
-                            <ellipse cx="98" cy="32.5" rx="2.7" ry="2.8" fill="#ffffff"/>
-                            <circle cx="97.6" cy="32.7" r="1.6" fill="#0f172a"/>
-                            <path d="M85.5,41.5 Q90,40.2 94.5,41.5" fill="none" stroke="#9a3412" stroke-width="1.8" stroke-linecap="round"/>
+                            <!-- Roof Depth Shadow -->
+                            <rect x="0" y="168" width="1440" height="24" fill="rgba(0,0,0,0.34)"/>
+                        </g>
+
+                        <!-- Soft Floodlight Light Cones (Night Mode) -->
+                        <g class="svg-floodlight-beams">
+                            <polygon points="94,64 180,64 620,340 160,340" fill="url(#beamLeft)"/>
+                            <polygon points="1260,64 1346,64 1280,340 820,340" fill="url(#beamRight)"/>
+                        </g>
+
+                        <!-- Pitchside LED Perimeter Boards -->
+                        <g>
+                            <rect x="0" y="302" width="1440" height="38" fill="#090d16"/>
+                            <rect x="0" y="302" width="1440" height="3" fill="#334155"/>
+
+                            <rect x="0"    y="306" width="150" height="32" fill="url(#ledToonStripes)"/>
+                            <rect x="435"  y="306" width="75"  height="32" fill="url(#ledToonStripes)"/>
+                            <rect x="930"  y="306" width="75"  height="32" fill="url(#ledToonStripes)"/>
+                            <rect x="1290" y="306" width="150" height="32" fill="url(#ledToonStripes)"/>
+
+                            <rect x="150" y="306" width="285" height="32" fill="#0f172a"/>
+                            <text x="292" y="327" fill="#ffffff" font-size="15.5" font-weight="900" letter-spacing="3" text-anchor="middle" font-family="system-ui, sans-serif">HOWAY THE LADS</text>
+
+                            <rect x="510" y="306" width="420" height="32" fill="#0b1120"/>
+                            <text x="720" y="327" fill="#facc15" font-size="16" font-weight="900" letter-spacing="3.5" text-anchor="middle" font-family="system-ui, sans-serif">ST JAMES' PARK • THE GALLOWGATE END</text>
+
+                            <rect x="1005" y="306" width="285" height="32" fill="#0f172a"/>
+                            <text x="1147" y="327" fill="#ffffff" font-size="15.5" font-weight="900" letter-spacing="3" text-anchor="middle" font-family="system-ui, sans-serif">HOWAY THE LADS</text>
                         </g>
                     </svg>
                 </div>
+            </div>
 
-                <!-- 5 Transparent Accessible Target Zones HUD -->
-                <div class="target-zones-grid" id="zones-container" role="region" aria-label="Goal Target Areas">
-                    <button class="target-btn target-tl" type="button" data-zone="TL" aria-label="Target Zone 1: Top Left Corner">
-                        <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                        <div class="target-ring" aria-hidden="true"><span class="target-ring-dot"></span></div>
-                        <div class="hud-target-pill">
-                            <span class="pill-num">1</span>
-                            <span>↖ TOP LEFT</span>
-                        </div>
-                    </button>
+            <!-- DEPTH LAYER 2 (MID-FAR): PERSPECTIVE MOWED PITCH & CRISP MARKINGS -->
+            <div id="layer-pitch" class="pov-layer">
+                <div class="pitch-layer" aria-hidden="true">
+                    <div class="pitch-turf"></div>
+                    <div class="pitch-lighting"></div>
 
-                    <button class="target-btn target-c" type="button" data-zone="C" aria-label="Target Zone 3: Center of Goal">
-                        <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                        <div class="target-ring" aria-hidden="true"><span class="target-ring-dot"></span></div>
-                        <div class="hud-target-pill">
-                            <span class="pill-num">3</span>
-                            <span>CENTER</span>
-                        </div>
-                    </button>
+                    <!-- Sharper POV Perspective White Pitch Lines: Goal Line, 6-Yard Box, 18-Yard Box, Penalty Arc -->
+                    <svg class="pitch-lines-svg" viewBox="0 0 1440 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="0" y1="36" x2="1440" y2="36" stroke="rgba(255,255,255,0.92)" stroke-width="5"/>
+                        <polygon points="460,36 980,36 1072,118 368,118" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="4.5" stroke-linejoin="round"/>
+                        <polygon points="245,36 1195,36 1410,365 30,365" fill="none" stroke="rgba(255,255,255,0.90)" stroke-width="5" stroke-linejoin="round"/>
+                        <path d="M 525,365 C 598,446 842,446 915,365" fill="none" stroke="rgba(255,255,255,0.90)" stroke-width="5" stroke-linecap="round"/>
+                    </svg>
 
-                    <button class="target-btn target-tr" type="button" data-zone="TR" aria-label="Target Zone 2: Top Right Corner">
-                        <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                        <div class="target-ring" aria-hidden="true"><span class="target-ring-dot"></span></div>
-                        <div class="hud-target-pill">
-                            <span class="pill-num">2</span>
-                            <span>↗ TOP RIGHT</span>
-                        </div>
-                    </button>
+                    <div class="pov-foreground-grass"></div>
+                </div>
+            </div>
 
-                    <button class="target-btn target-bl" type="button" data-zone="BL" aria-label="Target Zone 4: Bottom Left Corner">
-                        <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                        <div class="target-ring" aria-hidden="true"><span class="target-ring-dot"></span></div>
-                        <div class="hud-target-pill">
-                            <span class="pill-num">4</span>
-                            <span>↙ BOTTOM LEFT</span>
-                        </div>
-                    </button>
+            <!-- DEPTH LAYER 3 (GOAL): 3D GOAL FRAME + VECTOR GOALKEEPER + 5 TARGET ZONES -->
+            <div id="layer-goal" class="pov-layer">
+                <div class="goal-stage" id="goal-stage">
+                    <div class="goal-frame">
+                        <!-- 3D Metallic Goal Frame & Taut Diamond Netting -->
+                        <svg class="goal-svg" viewBox="0 0 640 310" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <pattern id="net-mesh" width="16" height="16" patternUnits="userSpaceOnUse">
+                                    <path d="M0 8 L8 0 L16 8 L8 16 Z" fill="none" stroke="rgba(255,255,255,0.44)" stroke-width="1.15"/>
+                                    <path d="M8 0 L8 16 M0 8 L16 8" stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>
+                                </pattern>
 
-                    <button class="target-btn target-br" type="button" data-zone="BR" aria-label="Target Zone 5: Bottom Right Corner">
-                        <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                        <div class="target-ring" aria-hidden="true"><span class="target-ring-dot"></span></div>
-                        <div class="hud-target-pill">
-                            <span class="pill-num">5</span>
-                            <span>↘ BOTTOM RIGHT</span>
+                                <linearGradient id="postVertGrad" x1="0" y1="0" x2="1" y2="0">
+                                    <stop offset="0%"   stop-color="#94a3b8"/>
+                                    <stop offset="22%"  stop-color="#ffffff"/>
+                                    <stop offset="52%"  stop-color="#f1f5f9"/>
+                                    <stop offset="82%"  stop-color="#cbd5e1"/>
+                                    <stop offset="100%" stop-color="#64748b"/>
+                                </linearGradient>
+
+                                <linearGradient id="crossbarGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%"   stop-color="#ffffff"/>
+                                    <stop offset="30%"  stop-color="#f8fafc"/>
+                                    <stop offset="72%"  stop-color="#cbd5e1"/>
+                                    <stop offset="100%" stop-color="#64748b"/>
+                                </linearGradient>
+
+                                <linearGradient id="netInteriorDepth" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%"   stop-color="#020617" stop-opacity="0.54"/>
+                                    <stop offset="65%"  stop-color="#020617" stop-opacity="0.22"/>
+                                    <stop offset="100%" stop-color="#020617" stop-opacity="0.06"/>
+                                </linearGradient>
+
+                                <linearGradient id="goalGroundShadow" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%"   stop-color="rgba(0,0,0,0.42)"/>
+                                    <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Goal Line Ground Shadow -->
+                            <polygon points="10,292 630,292 606,307 34,307" fill="url(#goalGroundShadow)"/>
+
+                            <!-- Netting & Rear Support Stanchions (Ripples on Goal) -->
+                            <g id="goal-net-group">
+                                <polygon points="62,48 578,48 612,286 28,286" fill="url(#netInteriorDepth)"/>
+                                <path d="M18,18 L62,48 L36,286" fill="none" stroke="#64748b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M622,18 L578,48 L604,286" fill="none" stroke="#64748b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="62" y1="48" x2="578" y2="48" stroke="#475569" stroke-width="3.5"/>
+                                <line x1="36" y1="286" x2="604" y2="286" stroke="#334155" stroke-width="3"/>
+
+                                <polygon points="62,48 578,48 604,286 36,286" fill="url(#net-mesh)" stroke="rgba(255,255,255,0.32)" stroke-width="1.2"/>
+                                <polygon points="18,18 622,18 578,48 62,48" fill="url(#net-mesh)" stroke="rgba(255,255,255,0.34)" stroke-width="1.2"/>
+                                <polygon points="18,18 62,48 36,286 18,292" fill="url(#net-mesh)" stroke="rgba(255,255,255,0.36)" stroke-width="1.2"/>
+                                <polygon points="622,18 578,48 604,286 622,292" fill="url(#net-mesh)" stroke="rgba(255,255,255,0.36)" stroke-width="1.2"/>
+                            </g>
+
+                            <!-- Crisp White Goal Line -->
+                            <line x1="10" y1="292" x2="630" y2="292" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+
+                            <!-- Tubular Metallic White Posts & Crossbar -->
+                            <rect x="10"  y="12" width="16"  height="282" rx="5" fill="url(#postVertGrad)" stroke="#475569" stroke-width="1.2"/>
+                            <rect x="614" y="12" width="16"  height="282" rx="5" fill="url(#postVertGrad)" stroke="#475569" stroke-width="1.2"/>
+                            <rect x="10"  y="8"  width="620" height="16"  rx="6" fill="url(#crossbarGrad)" stroke="#475569" stroke-width="1.2"/>
+
+                            <!-- Metallic Specular Highlights -->
+                            <line x1="15"  y1="24" x2="15"  y2="288" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="619" y1="24" x2="619" y2="288" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="22"  y1="12" x2="618" y2="12"  stroke="rgba(255,255,255,0.9)"  stroke-width="2.2" stroke-linecap="round"/>
+
+                            <!-- Elbow Joints -->
+                            <circle cx="18"  cy="16" r="8.5" fill="url(#crossbarGrad)" stroke="#475569" stroke-width="1.1"/>
+                            <circle cx="622" cy="16" r="8.5" fill="url(#crossbarGrad)" stroke="#475569" stroke-width="1.1"/>
+                        </svg>
+
+                        <!-- Athletic Flat-Vector Man Utd #1 Goalkeeper -->
+                        <div id="goalkeeper" class="goalkeeper-actor">
+                            <svg viewBox="0 0 180 215" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <defs>
+                                    <linearGradient id="gkJerseyGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%"   stop-color="#ef4444"/>
+                                        <stop offset="52%"  stop-color="#dc2626"/>
+                                        <stop offset="100%" stop-color="#991b1b"/>
+                                    </linearGradient>
+                                    <linearGradient id="gkSleeveGrad" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%"   stop-color="#dc2626"/>
+                                        <stop offset="100%" stop-color="#991b1b"/>
+                                    </linearGradient>
+                                    <linearGradient id="gkShortsGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%"   stop-color="#27272a"/>
+                                        <stop offset="100%" stop-color="#09090b"/>
+                                    </linearGradient>
+                                    <linearGradient id="gkGloveLatex" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%"   stop-color="#fef08a"/>
+                                        <stop offset="55%"  stop-color="#facc15"/>
+                                        <stop offset="100%" stop-color="#ca8a04"/>
+                                    </linearGradient>
+                                    <linearGradient id="gkSkinGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%"   stop-color="#ffedd5"/>
+                                        <stop offset="65%"  stop-color="#fed7aa"/>
+                                        <stop offset="100%" stop-color="#fdba74"/>
+                                    </linearGradient>
+                                </defs>
+
+                                <!-- Turf Contact Shadow -->
+                                <ellipse cx="90" cy="206" rx="54" ry="8.5" fill="rgba(4, 18, 8, 0.56)"/>
+
+                                <g class="keeper-body-idle">
+                                    <!-- Knees / Lower Thighs -->
+                                    <path d="M56,144 L73,144 L69,165 L52,165 Z" fill="#fdba74"/>
+                                    <path d="M107,144 L124,144 L128,165 L111,165 Z" fill="#fdba74"/>
+
+                                    <!-- Red Socks with White Turnover Bands -->
+                                    <path d="M51,160 L70,160 L66,195 L48,195 Z" fill="#dc2626"/>
+                                    <path d="M110,160 L129,160 L132,195 L114,195 Z" fill="#dc2626"/>
+                                    <path d="M62,160 L70,160 L66,195 L59,195 Z" fill="#991b1b" opacity="0.5"/>
+                                    <path d="M110,160 L118,160 L121,195 L114,195 Z" fill="#991b1b" opacity="0.5"/>
+                                    <rect x="50"  y="159" width="21" height="6" rx="2" fill="#ffffff"/>
+                                    <rect x="109" y="159" width="21" height="6" rx="2" fill="#ffffff"/>
+                                    <rect x="50"  y="166" width="20" height="2.5" fill="#09090b"/>
+                                    <rect x="110" y="166" width="20" height="2.5" fill="#09090b"/>
+
+                                    <!-- Studded Football Boots -->
+                                    <path d="M46,192 L67,192 L69,203 L37,203 C35,203 35,198 39,196 Z" fill="#0f172a"/>
+                                    <path d="M38,203 L69,203 L69,206 L38,206 Z" fill="#f8fafc"/>
+                                    <path d="M48,195 L57,198" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+                                    <rect x="41" y="206" width="4" height="2.5" rx="1" fill="#334155"/>
+                                    <rect x="51" y="206" width="4" height="2.5" rx="1" fill="#334155"/>
+                                    <rect x="62" y="206" width="4" height="2.5" rx="1" fill="#334155"/>
+
+                                    <path d="M113,192 L134,192 L141,196 C145,198 145,203 143,203 L111,203 Z" fill="#0f172a"/>
+                                    <path d="M111,203 L142,203 L142,206 L111,206 Z" fill="#f8fafc"/>
+                                    <path d="M132,195 L123,198" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+                                    <rect x="114" y="206" width="4" height="2.5" rx="1" fill="#334155"/>
+                                    <rect x="125" y="206" width="4" height="2.5" rx="1" fill="#334155"/>
+                                    <rect x="135" y="206" width="4" height="2.5" rx="1" fill="#334155"/>
+
+                                    <!-- Black Shorts with White Trim -->
+                                    <path d="M54,113 L126,113 L133,149 C133,151 131,152 128,152 L101,152 L90,136 L79,152 L52,152 C49,152 47,151 47,149 Z" fill="url(#gkShortsGrad)" stroke="#09090b" stroke-width="1.5"/>
+                                    <path d="M55,116 L49,149" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
+                                    <path d="M125,116 L131,149" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
+
+                                    <!-- Articulated Guard Arms -->
+                                    <path d="M58,64 L32,84 L20,62" fill="none" stroke="url(#gkSleeveGrad)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M25,71 L20,61" fill="none" stroke="#0f172a" stroke-width="13" stroke-linecap="round"/>
+                                    <path d="M122,64 L148,84 L160,62" fill="none" stroke="url(#gkSleeveGrad)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M155,71 L160,61" fill="none" stroke="#0f172a" stroke-width="13" stroke-linecap="round"/>
+
+                                    <!-- Red Man Utd Keeper Jersey with Collar & #1 -->
+                                    <path d="M56,55 C64,50 116,50 124,55 L130,82 L124,116 L56,116 L50,82 Z" fill="url(#gkJerseyGrad)" stroke="#7f1d1d" stroke-width="1.5"/>
+                                    <path d="M54,70 L90,94 L126,70 L124,79 L90,103 L56,79 Z" fill="#7f1d1d" opacity="0.55"/>
+                                    <path d="M62,55 L90,74 L118,55" fill="none" stroke="#facc15" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M77,52 L90,64 L103,52" fill="#0f172a"/>
+                                    <path d="M77,52 L90,64 L103,52" fill="none" stroke="#facc15" stroke-width="2"/>
+
+                                    <!-- MUFC Crest -->
+                                    <path d="M104,67 L115,67 L115,74 C115,78 109.5,81 109.5,81 C109.5,81 104,78 104,74 Z" fill="#facc15" stroke="#7f1d1d" stroke-width="1"/>
+                                    <circle cx="109.5" cy="73" r="2.8" fill="#dc2626"/>
+
+                                    <!-- Squad #1 -->
+                                    <text x="90" y="106" fill="#ffffff" font-size="29" font-weight="900" text-anchor="middle" font-family="system-ui, sans-serif">1</text>
+
+                                    <!-- High-Visibility Neon Yellow Pro Keeper Gloves -->
+                                    <g transform="translate(17, 50) rotate(-14)">
+                                        <rect x="-8" y="8" width="16" height="7" rx="2" fill="#0f172a"/>
+                                        <rect x="-5" y="10" width="10" height="3" rx="1" fill="#ffffff"/>
+                                        <path d="M-11,8 L-12,-7 C-12,-11 -8,-12 -6,-9 L-6,-13 C-6,-16 -2,-16 -1,-13 L-1,-14 C0,-17 4,-17 5,-13 L5,-11 C7,-14 11,-12 10,-7 L10,8 Z" fill="url(#gkGloveLatex)" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+                                        <path d="M9,2 L15,-3 C18,-5 19,-1 16,2 L10,7 Z" fill="url(#gkGloveLatex)" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+                                        <path d="M-6,1 Q0,-3 6,1" fill="none" stroke="#0f172a" stroke-width="1.6" stroke-linecap="round"/>
+                                    </g>
+
+                                    <g transform="translate(163, 50) rotate(14)">
+                                        <rect x="-8" y="8" width="16" height="7" rx="2" fill="#0f172a"/>
+                                        <rect x="-5" y="10" width="10" height="3" rx="1" fill="#ffffff"/>
+                                        <path d="M11,8 L12,-7 C12,-11 8,-12 6,-9 L6,-13 C6,-16 2,-16 1,-13 L1,-14 C0,-17 -4,-17 -5,-13 L-5,-11 C-7,-14 -11,-12 -10,-7 L-10,8 Z" fill="url(#gkGloveLatex)" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+                                        <path d="M-9,2 L-15,-3 C-18,-5 -19,-1 -16,2 L-10,7 Z" fill="url(#gkGloveLatex)" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+                                        <path d="M-6,1 Q0,-3 6,1" fill="none" stroke="#0f172a" stroke-width="1.6" stroke-linecap="round"/>
+                                    </g>
+
+                                    <!-- Head, Hair & Focused Expression -->
+                                    <rect x="83" y="42" width="14" height="14" rx="4" fill="#fdba74"/>
+                                    <circle cx="72" cy="32" r="3.5" fill="#fdba74"/>
+                                    <circle cx="108" cy="32" r="3.5" fill="#fdba74"/>
+                                    <path d="M73,27 C73,16 107,16 107,27 L106,36 C105,45 97,49 90,49 C83,49 75,45 74,36 Z" fill="url(#gkSkinGrad)" stroke="#ea580c" stroke-width="0.7"/>
+                                    <path d="M72,28 C71,14 82,10 91,11 C102,11 109,16 108,28 C104,21 97,18 89,19 C81,19 76,22 72,28 Z" fill="#291508"/>
+                                    <path d="M77,27 L85,29" stroke="#291508" stroke-width="2.1" stroke-linecap="round"/>
+                                    <path d="M103,27 L95,29" stroke="#291508" stroke-width="2.1" stroke-linecap="round"/>
+                                    <ellipse cx="82" cy="32.5" rx="2.7" ry="2.8" fill="#ffffff"/>
+                                    <circle cx="82.4" cy="32.7" r="1.6" fill="#0f172a"/>
+                                    <ellipse cx="98" cy="32.5" rx="2.7" ry="2.8" fill="#ffffff"/>
+                                    <circle cx="97.6" cy="32.7" r="1.6" fill="#0f172a"/>
+                                    <path d="M85.5,41.5 Q90,40.2 94.5,41.5" fill="none" stroke="#9a3412" stroke-width="1.8" stroke-linecap="round"/>
+                                </g>
+                            </svg>
                         </div>
-                    </button>
+
+                        <!-- 5 Transparent Accessible Target Zones HUD -->
+                        <div class="target-zones-grid zones-hidden" id="zones-container" role="region" aria-label="Goal Target Areas">
+                            <button class="target-btn target-tl" type="button" data-zone="TL" aria-label="Target Zone 1: Top Left Corner">
+                                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
+                                <div class="target-ring" aria-hidden="true"><span class="target-ring-dot"></span></div>
+                                <div class="hud-target-pill">
+                                    <span class="pill-num">1</span>
+                                    <span>↖ TOP LEFT</span>
+                                </div>
+                            </button>
+
+                            <button class="target-btn target-c" type="button" data-zone="C" aria-label="Target Zone 3: Center of Goal">
+                                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
+                                <div class="target-ring" aria-hidden="true"><span class="target-ring-dot"></span></div>
+                                <div class="hud-target-pill">
+                                    <span class="pill-num">3</span>
+                                    <span>CENTER</span>
+                                </div>
+                            </button>
+
+                            <button class="target-btn target-tr" type="button" data-zone="TR" aria-label="Target Zone 2: Top Right Corner">
+                                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
+                                <div class="target-ring" aria-hidden="true"><span class="target-ring-dot"></span></div>
+                                <div class="hud-target-pill">
+                                    <span class="pill-num">2</span>
+                                    <span>↗ TOP RIGHT</span>
+                                </div>
+                            </button>
+
+                            <button class="target-btn target-bl" type="button" data-zone="BL" aria-label="Target Zone 4: Bottom Left Corner">
+                                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
+                                <div class="target-ring" aria-hidden="true"><span class="target-ring-dot"></span></div>
+                                <div class="hud-target-pill">
+                                    <span class="pill-num">4</span>
+                                    <span>↙ BOTTOM LEFT</span>
+                                </div>
+                            </button>
+
+                            <button class="target-btn target-br" type="button" data-zone="BR" aria-label="Target Zone 5: Bottom Right Corner">
+                                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
+                                <div class="target-ring" aria-hidden="true"><span class="target-ring-dot"></span></div>
+                                <div class="hud-target-pill">
+                                    <span class="pill-num">5</span>
+                                    <span>↘ BOTTOM RIGHT</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DEPTH LAYER 4 (FOREGROUND): PENALTY SPOT, SHADOW, TURF SPRAY & MATCH FOOTBALL -->
+            <div id="layer-foreground" class="pov-layer">
+                <div class="penalty-spot" id="penalty-spot"></div>
+                <div id="ball-shadow" class="football-shadow"></div>
+                <canvas id="turf-spray-canvas" aria-hidden="true"></canvas>
+
+                <div id="football" class="football-actor">
+                    <div id="football-spinner" class="football-inner-spinner">
+                        <svg viewBox="0 0 200 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <defs>
+                                <clipPath id="ballSphereClip">
+                                    <circle cx="100" cy="100" r="95"/>
+                                </clipPath>
+                                <radialGradient id="leatherWhiteGrad" cx="36%" cy="30%" r="70%">
+                                    <stop offset="0%"   stop-color="#ffffff"/>
+                                    <stop offset="58%"  stop-color="#f8fafc"/>
+                                    <stop offset="86%"  stop-color="#e2e8f0"/>
+                                    <stop offset="100%" stop-color="#cbd5e1"/>
+                                </radialGradient>
+                                <radialGradient id="panelDarkGrad" cx="34%" cy="28%" r="74%">
+                                    <stop offset="0%"   stop-color="#334155"/>
+                                    <stop offset="52%"  stop-color="#0f172a"/>
+                                    <stop offset="100%" stop-color="#020617"/>
+                                </radialGradient>
+                                <radialGradient id="sphereVolumeGrad" cx="32%" cy="26%" r="72%">
+                                    <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.34"/>
+                                    <stop offset="44%"  stop-color="#ffffff" stop-opacity="0"/>
+                                    <stop offset="74%"  stop-color="#000000" stop-opacity="0.20"/>
+                                    <stop offset="93%"  stop-color="#020617" stop-opacity="0.62"/>
+                                    <stop offset="100%" stop-color="#000000" stop-opacity="0.82"/>
+                                </radialGradient>
+                                <linearGradient id="specularGlint" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.9"/>
+                                    <stop offset="55%"  stop-color="#ffffff" stop-opacity="0.28"/>
+                                    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+                                </linearGradient>
+                                <radialGradient id="turfBounceGrad" cx="50%" cy="96%" r="48%">
+                                    <stop offset="0%"   stop-color="#22c55e" stop-opacity="0.34"/>
+                                    <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+                                </radialGradient>
+                            </defs>
+
+                            <g clip-path="url(#ballSphereClip)">
+                                <circle cx="100" cy="100" r="95" fill="url(#leatherWhiteGrad)"/>
+                                <!-- Stitched Seam Contours -->
+                                <g stroke="#64748b" stroke-width="2.2" fill="none" stroke-linecap="round">
+                                    <path d="M100,66 L100,32"/>
+                                    <path d="M132,90 L160,76"/>
+                                    <path d="M120,126 L148,150"/>
+                                    <path d="M80,126 L52,150"/>
+                                    <path d="M68,90 L40,76"/>
+                                </g>
+                                <!-- Curved Pentagon Panels -->
+                                <path d="M100,65 C113,71 122,79 132,90 C129,104 125,116 119,127 C107,129 93,129 81,127 C75,116 71,104 68,90 C78,79 87,71 100,65 Z"
+                                      fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2"/>
+                                <path d="M100,33 C88,22 83,13 81,1 C94,0 106,0 119,1 C117,13 112,22 100,33 Z"
+                                      fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2"/>
+                                <path d="M159,76 C151,62 149,50 153,37 C170,48 184,62 193,80 C183,82 171,80 159,76 Z"
+                                      fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2"/>
+                                <path d="M147,149 C143,163 145,175 151,187 C170,173 184,154 192,132 C177,134 162,139 147,149 Z"
+                                      fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2"/>
+                                <path d="M53,149 C38,139 23,134 8,132 C16,154 30,173 49,187 C55,175 57,163 53,149 Z"
+                                      fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2"/>
+                                <path d="M41,76 C29,80 17,82 7,80 C16,62 30,48 47,37 C51,50 49,62 41,76 Z"
+                                      fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2"/>
+
+                                <!-- Spherical 3D Lighting, Specular Glint & Turf Bounce -->
+                                <circle cx="100" cy="100" r="95" fill="url(#sphereVolumeGrad)"/>
+                                <ellipse cx="67" cy="52" rx="28" ry="14" transform="rotate(-30 67 52)" fill="url(#specularGlint)"/>
+                                <circle cx="60" cy="46" r="5.5" fill="#ffffff" opacity="0.88"/>
+                                <ellipse cx="100" cy="184" rx="68" ry="22" fill="url(#turfBounceGrad)"/>
+                            </g>
+                            <circle cx="100" cy="100" r="94.5" fill="none" stroke="#0f172a" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /#pov-camera-rig -->
+
+        <!-- FIRST-PERSON NEWCASTLE KICKING LEG & PRO FOOTBALL BOOT -->
+        <div id="pov-kicking-boot" aria-hidden="true">
+            <svg viewBox="0 0 260 280" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="bootLeather" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%"   stop-color="#334155"/>
+                        <stop offset="35%"  stop-color="#0f172a"/>
+                        <stop offset="100%" stop-color="#020617"/>
+                    </linearGradient>
+                    <linearGradient id="bootGold" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%"   stop-color="#fef08a"/>
+                        <stop offset="50%"  stop-color="#facc15"/>
+                        <stop offset="100%" stop-color="#a16207"/>
+                    </linearGradient>
+                    <linearGradient id="sockShade" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%"   stop-color="rgba(0,0,0,0.34)"/>
+                        <stop offset="45%"  stop-color="rgba(255,255,255,0.12)"/>
+                        <stop offset="100%" stop-color="rgba(0,0,0,0.44)"/>
+                    </linearGradient>
+                    <clipPath id="nufcSockClip">
+                        <path d="M126,118 L206,128 L234,278 L138,278 Z"/>
+                    </clipPath>
+                </defs>
+
+                <!-- Newcastle Black & White Hooped Sock (Lower Leg) -->
+                <g clip-path="url(#nufcSockClip)">
+                    <rect x="115" y="110" width="130" height="175" fill="#090d16"/>
+                    <rect x="115" y="138" width="130" height="18" fill="#ffffff"/>
+                    <rect x="115" y="176" width="130" height="18" fill="#ffffff"/>
+                    <rect x="115" y="214" width="130" height="18" fill="#ffffff"/>
+                    <rect x="115" y="250" width="130" height="18" fill="#ffffff"/>
+                    <!-- Cylindrical Leg Shading -->
+                    <rect x="115" y="110" width="130" height="175" fill="url(#sockShade)"/>
+                </g>
+                <!-- White Pro Ankle Tape -->
+                <path d="M125,116 L205,127 L207,140 L127,129 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+
+                <!-- Pro Black & Gold Football Boot (First-Person Strike Angle) -->
+                <!-- Metallic Soleplate & Inner Studs -->
+                <path d="M36,118 C48,144 96,154 156,144 L172,126 C115,134 66,126 36,118 Z" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+                <g fill="#facc15" stroke="#0f172a" stroke-width="1.2">
+                    <rect x="48"  y="128" width="8" height="11" rx="3" transform="rotate(18 52 133)"/>
+                    <rect x="76"  y="137" width="8" height="11" rx="3" transform="rotate(10 80 142)"/>
+                    <rect x="110" y="141" width="8" height="11" rx="3" transform="rotate(4 114 146)"/>
+                    <rect x="142" y="139" width="8" height="11" rx="3" transform="rotate(-6 146 144)"/>
+                </g>
+
+                <!-- Boot Upper Shell -->
+                <path d="M196,125 C208,108 192,82 162,74 L102,60 C72,54 34,74 26,96 C21,110 34,124 66,129 C110,136 168,136 196,125 Z"
+                      fill="url(#bootLeather)" stroke="#475569" stroke-width="2"/>
+
+                <!-- Instep Strike Zone Gold Speed Chevrons -->
+                <path d="M58,86 L96,74 L106,80 L68,94 Z" fill="url(#bootGold)"/>
+                <path d="M84,96 L124,82 L134,88 L94,104 Z" fill="url(#bootGold)" opacity="0.88"/>
+                <path d="M112,106 L150,92 L160,98 L122,113 Z" fill="url(#bootGold)" opacity="0.72"/>
+
+                <!-- Boot Collar & Dynamic Laces -->
+                <path d="M118,67 C134,76 154,84 176,82" fill="none" stroke="#94a3b8" stroke-width="3.5" stroke-linecap="round"/>
+                <g stroke="#f8fafc" stroke-width="2.6" stroke-linecap="round">
+                    <line x1="76"  y1="66" x2="90"  y2="78"/>
+                    <line x1="92"  y1="64" x2="106" y2="77"/>
+                    <line x1="108" y1="65" x2="122" y2="79"/>
+                </g>
+                <!-- Specular Leather Highlight -->
+                <path d="M40,94 C54,78 76,72 104,72" fill="none" stroke="rgba(255,255,255,0.34)" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <!-- PERIPHERAL VIGNETTE, FLOODLIGHT LENS GLARE & GOAL FLASH -->
+        <div id="pov-vignette-lens" aria-hidden="true">
+            <div class="lens-streak lens-streak-left"></div>
+            <div class="lens-streak lens-streak-right"></div>
+        </div>
+        <div id="goal-flash-overlay" aria-hidden="true"></div>
+
+        <!-- ==================================================================
+             CINEMATIC AERIAL DRONE FLY-IN INTRO OVERLAY
+             ================================================================== -->
+        <div id="drone-intro-overlay" aria-hidden="true">
+
+            <!-- Drone Layer A: Aerial Sky, City Horizon & Stadium Light Dome -->
+            <div id="drone-sky-layer" class="drone-layer">
+                <svg viewBox="0 0 1440 810" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="droneNightSky" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%"   stop-color="#020612"/>
+                            <stop offset="52%"  stop-color="#0b1834"/>
+                            <stop offset="100%" stop-color="#172d54"/>
+                        </linearGradient>
+                        <linearGradient id="droneDaySky" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%"   stop-color="#1d74c6"/>
+                            <stop offset="55%"  stop-color="#5db4f2"/>
+                            <stop offset="100%" stop-color="#cceafe"/>
+                        </linearGradient>
+                        <radialGradient id="stadiumGlowDome" cx="50%" cy="62%" r="46%">
+                            <stop offset="0%"   stop-color="#e0f2fe" stop-opacity="0.45"/>
+                            <stop offset="45%"  stop-color="#60a5fa" stop-opacity="0.16"/>
+                            <stop offset="100%" stop-color="#020612" stop-opacity="0"/>
+                        </radialGradient>
+                    </defs>
+
+                    <rect width="1440" height="810" fill="url(#droneNightSky)"/>
+                    <rect class="drone-day-only" width="1440" height="810" fill="url(#droneDaySky)"/>
+                    <rect class="drone-night-only" width="1440" height="810" fill="url(#stadiumGlowDome)"/>
+
+                    <!-- Subtle Night Stars / Daylight Clouds -->
+                    <g class="drone-night-only" fill="#e2e8f0" opacity="0.55">
+                        <circle cx="190" cy="110" r="1.5"/><circle cx="380" cy="84" r="1.8"/><circle cx="620" cy="65" r="1.4"/>
+                        <circle cx="940" cy="96" r="1.7"/><circle cx="1180" cy="78" r="1.5"/><circle cx="1310" cy="135" r="1.3"/>
+                        <circle cx="290" cy="175" r="1.2"/><circle cx="1060" cy="158" r="1.4"/>
+                    </g>
+                    <g class="drone-day-only" fill="#ffffff" opacity="0.86">
+                        <path d="M160,150 C160,130 180,118 202,122 C215,100 248,96 268,110 C288,104 314,116 318,138 C334,142 338,162 322,170 L170,170 C154,170 150,156 160,150 Z"/>
+                        <path d="M980,130 C980,112 1000,100 1022,104 C1035,84 1068,80 1086,94 C1106,88 1130,100 1134,120 C1148,124 1152,142 1138,150 L990,150 C974,150 970,136 980,130 Z"/>
+                    </g>
+
+                    <!-- Distant Newcastle Upon Tyne Skyline Silhouette -->
+                    <path d="M0,455 L95,455 L95,432 L145,432 L145,448 L210,448 L210,418 L255,418 L255,445 L350,445 L350,435 L1090,435 L1090,445 L1185,445 L1185,414 L1235,414 L1235,444 L1320,444 L1320,425 L1375,425 L1375,452 L1440,452 L1440,810 L0,810 Z" fill="#060c1a" opacity="0.85"/>
+                </svg>
+            </div>
+
+            <!-- Drone Layer B: Aerial Approach into St. James' Park Bowl & Cantilevered Roof -->
+            <div id="drone-stadium-layer" class="drone-layer">
+                <svg viewBox="0 0 1440 810" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="droneBeamL" x1="0.1" y1="0" x2="0.8" y2="1">
+                            <stop offset="0%"   stop-color="#fef9c3" stop-opacity="0.48"/>
+                            <stop offset="55%"  stop-color="#bae6fd" stop-opacity="0.14"/>
+                            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+                        </linearGradient>
+                        <linearGradient id="droneBeamR" x1="0.9" y1="0" x2="0.2" y2="1">
+                            <stop offset="0%"   stop-color="#fef9c3" stop-opacity="0.48"/>
+                            <stop offset="55%"  stop-color="#bae6fd" stop-opacity="0.14"/>
+                            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+                        </linearGradient>
+                        <linearGradient id="bowlPitchGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%"   stop-color="#196b38"/>
+                            <stop offset="50%"  stop-color="#22914d"/>
+                            <stop offset="100%" stop-color="#14582e"/>
+                        </linearGradient>
+                        <radialGradient id="droneFlare" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.9"/>
+                            <stop offset="30%"  stop-color="#fef08a" stop-opacity="0.32"/>
+                            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+                        </radialGradient>
+                    </defs>
+
+                    <!-- Outer Stadium Structure Base -->
+                    <path d="M120,455 Q720,305 1320,455 L1390,690 L50,690 Z" fill="#0f172a" stroke="#334155" stroke-width="3"/>
+
+                    <!-- Glowing Emerald Pitch Visible Inside the Bowl -->
+                    <polygon points="390,468 1050,468 1190,685 250,685" fill="url(#bowlPitchGrad)"/>
+                    <!-- Crisp Perspective Pitch Markings in the Aerial Bowl -->
+                    <g stroke="rgba(255,255,255,0.78)" stroke-width="3" fill="none">
+                        <line x1="390" y1="488" x2="1050" y2="488"/>
+                        <polygon points="555,488 885,488 925,575 515,575"/>
+                        <polygon points="645,488 795,488 810,518 630,518"/>
+                        <circle cx="720" cy="548" r="3.5" fill="#ffffff"/>
+                        <path d="M665,575 C690,602 750,602 775,575"/>
+                        <!-- Distant Goal Frame -->
+                        <rect x="676" y="468" width="88" height="22" stroke="#ffffff" stroke-width="3.5"/>
+                    </g>
+
+                    <!-- Packed Inner Tier Stands Surrounding the Pitch -->
+                    <polygon points="210,395 1230,395 1050,468 390,468" fill="#111827"/>
+                    <polygon points="150,435 390,468 250,685 75,620" fill="#0c1322"/>
+                    <polygon points="1290,435 1050,468 1190,685 1365,620" fill="#0c1322"/>
+
+                    <!-- Iconic St. James' Park Sweeping Cantilevered White Roof Canopy -->
+                    <path class="drone-roof-shadow" d="M140,395 Q720,255 1300,395 L1245,432 Q720,315 195,432 Z"/>
+                    <path class="drone-roof-metal"  d="M115,382 Q720,224 1325,382 L1292,402 Q720,260 148,402 Z"/>
+                    <!-- Roof Truss Arches -->
+                    <path d="M148,376 Q720,208 1292,376" fill="none" stroke="#94a3b8" stroke-width="7"/>
+                    <path d="M260,334 Q720,235 1180,334" fill="none" stroke="#475569" stroke-width="4"/>
+
+                    <!-- Side Cantilevered Roof Wings -->
+                    <path class="drone-roof-metal" d="M60,415 L235,385 L185,595 L10,540 Z" opacity="0.95"/>
+                    <path class="drone-roof-metal" d="M1380,415 L1205,385 L1255,595 L1430,540 Z" opacity="0.95"/>
+
+                    <!-- Towering Aerial Floodlights & Volumetric Cones -->
+                    <g>
+                        <rect x="215" y="218" width="84" height="30" rx="6" fill="#0f172a" stroke="#64748b" stroke-width="2.5"/>
+                        <rect x="223" y="225" width="68" height="16" rx="3" fill="#fef9c3"/>
+                        <rect x="1141" y="218" width="84" height="30" rx="6" fill="#0f172a" stroke="#64748b" stroke-width="2.5"/>
+                        <rect x="1149" y="225" width="68" height="16" rx="3" fill="#fef9c3"/>
+                    </g>
+
+                    <g class="drone-night-only">
+                        <polygon points="215,248 299,248 760,650 280,650" fill="url(#droneBeamL)"/>
+                        <polygon points="1141,248 1225,248 1160,650 680,650" fill="url(#droneBeamR)"/>
+                        <circle cx="257"  cy="233" r="95" fill="url(#droneFlare)"/>
+                        <circle cx="1183" cy="233" r="95" fill="url(#droneFlare)"/>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- Drone Layer C: Foreground Roof Truss Overhang (Rushes Past Lens During Dive) -->
+            <div id="drone-truss-pass-layer" class="drone-layer">
+                <svg viewBox="0 0 1440 810" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M-40,-20 L1480,-20 L1480,105 Q720,40 -40,105 Z" fill="#090f1d" opacity="0.9"/>
+                    <path d="M-40,95 Q720,30 1480,95" fill="none" stroke="#64748b" stroke-width="9"/>
+                    <line x1="220"  y1="0" x2="275"  y2="84" stroke="#334155" stroke-width="6"/>
+                    <line x1="520"  y1="0" x2="545"  y2="68" stroke="#334155" stroke-width="6"/>
+                    <line x1="920"  y1="0" x2="895"  y2="68" stroke="#334155" stroke-width="6"/>
+                    <line x1="1220" y1="0" x2="1165" y2="84" stroke="#334155" stroke-width="6"/>
+                </svg>
+            </div>
+
+            <!-- Broadcast Lower-Third Title Card -->
+            <div id="drone-broadcast-card">
+                <div class="broadcast-card-stripes"></div>
+                <div class="broadcast-card-body">
+                    <div class="broadcast-live-row">
+                        <span class="live-dot"></span>
+                        <span class="broadcast-kicker">MATCHDAY LIVE • ST. JAMES' PARK</span>
+                    </div>
+                    <div class="broadcast-headline">PENALTY SHOOTOUT — GALLOWGATE END</div>
+                    <div class="broadcast-sub">NEWCASTLE UNITED vs MANCHESTER UNITED • FIRST-PERSON POV</div>
                 </div>
             </div>
         </div>
 
-        <!-- 4. DYNAMIC GROUND SHADOW & CRISP MODERN MATCH FOOTBALL -->
-        <div id="ball-shadow" class="football-shadow"></div>
+        <!-- Accessible Skip Intro Button -->
+        <button id="btn-skip-intro" type="button" aria-label="Skip Drone Intro Animation">
+            <span>SKIP INTRO</span>
+            <span aria-hidden="true">⏭</span>
+        </button>
 
-        <div id="football" class="football-actor">
-            <div id="football-spinner" class="football-inner-spinner">
-                <svg viewBox="0 0 200 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <defs>
-                        <clipPath id="ballSphereClip">
-                            <circle cx="100" cy="100" r="95"/>
-                        </clipPath>
-                        <radialGradient id="leatherWhiteGrad" cx="36%" cy="30%" r="70%">
-                            <stop offset="0%"   stop-color="#ffffff"/>
-                            <stop offset="58%"  stop-color="#f8fafc"/>
-                            <stop offset="86%"  stop-color="#e2e8f0"/>
-                            <stop offset="100%" stop-color="#cbd5e1"/>
-                        </radialGradient>
-                        <radialGradient id="panelDarkGrad" cx="34%" cy="28%" r="74%">
-                            <stop offset="0%"   stop-color="#334155"/>
-                            <stop offset="52%"  stop-color="#0f172a"/>
-                            <stop offset="100%" stop-color="#020617"/>
-                        </radialGradient>
-                        <radialGradient id="sphereVolumeGrad" cx="32%" cy="26%" r="72%">
-                            <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.34"/>
-                            <stop offset="44%"  stop-color="#ffffff" stop-opacity="0"/>
-                            <stop offset="74%"  stop-color="#000000" stop-opacity="0.20"/>
-                            <stop offset="93%"  stop-color="#020617" stop-opacity="0.62"/>
-                            <stop offset="100%" stop-color="#000000" stop-opacity="0.82"/>
-                        </radialGradient>
-                        <linearGradient id="specularGlint" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.9"/>
-                            <stop offset="55%"  stop-color="#ffffff" stop-opacity="0.28"/>
-                            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-                        </linearGradient>
-                        <radialGradient id="turfBounceGrad" cx="50%" cy="96%" r="48%">
-                            <stop offset="0%"   stop-color="#22c55e" stop-opacity="0.34"/>
-                            <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
-                        </radialGradient>
-                    </defs>
-
-                    <g clip-path="url(#ballSphereClip)">
-                        <circle cx="100" cy="100" r="95" fill="url(#leatherWhiteGrad)"/>
-                        <!-- Stitched Seam Contours -->
-                        <g stroke="#64748b" stroke-width="2.2" fill="none" stroke-linecap="round">
-                            <path d="M100,66 L100,32"/>
-                            <path d="M132,90 L160,76"/>
-                            <path d="M120,126 L148,150"/>
-                            <path d="M80,126 L52,150"/>
-                            <path d="M68,90 L40,76"/>
-                        </g>
-                        <!-- Curved Pentagon Panels -->
-                        <path d="M100,65 C113,71 122,79 132,90 C129,104 125,116 119,127 C107,129 93,129 81,127 C75,116 71,104 68,90 C78,79 87,71 100,65 Z"
-                              fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2"/>
-                        <path d="M100,33 C88,22 83,13 81,1 C94,0 106,0 119,1 C117,13 112,22 100,33 Z"
-                              fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2"/>
-                        <path d="M159,76 C151,62 149,50 153,37 C170,48 184,62 193,80 C183,82 171,80 159,76 Z"
-                              fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2"/>
-                        <path d="M147,149 C143,163 145,175 151,187 C170,173 184,154 192,132 C177,134 162,139 147,149 Z"
-                              fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2"/>
-                        <path d="M53,149 C38,139 23,134 8,132 C16,154 30,173 49,187 C55,175 57,163 53,149 Z"
-                              fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2"/>
-                        <path d="M41,76 C29,80 17,82 7,80 C16,62 30,48 47,37 C51,50 49,62 41,76 Z"
-                              fill="url(#panelDarkGrad)" stroke="#1e293b" stroke-width="2"/>
-
-                        <!-- Spherical 3D Lighting, Specular Glint & Turf Bounce -->
-                        <circle cx="100" cy="100" r="95" fill="url(#sphereVolumeGrad)"/>
-                        <ellipse cx="67" cy="52" rx="28" ry="14" transform="rotate(-30 67 52)" fill="url(#specularGlint)"/>
-                        <circle cx="60" cy="46" r="5.5" fill="#ffffff" opacity="0.88"/>
-                        <ellipse cx="100" cy="184" rx="68" ry="22" fill="url(#turfBounceGrad)"/>
-                    </g>
-                    <circle cx="100" cy="100" r="94.5" fill="none" stroke="#0f172a" stroke-width="2"/>
-                </svg>
-            </div>
-        </div>
-
-        <!-- 5. PITCH-LEVEL NEXT SHOT BUTTON -->
+        <!-- PITCH-LEVEL NEXT SHOT BUTTON -->
         <div id="gameplay-prompt-bar">
             <button id="btn-pitch-next-kick" class="btn-pitch-next hidden" type="button">
                 <span>TAKE ANOTHER SHOT</span>
@@ -1945,19 +2603,40 @@
         let scoreManUtd = 0;
         let streak = 0;
         let isShooting = false;
+        let isIntroPlaying = true;
         let soundEnabled = true;
         let isDarkMode = true;
+        let kickSequenceId = 0; // Cancels stale timers if user replays intro or resets
 
+        const arenaContainer = document.getElementById('arena-container');
+        const povCameraRig = document.getElementById('pov-camera-rig');
+        const layerFar = document.getElementById('layer-far');
+        const layerPitch = document.getElementById('layer-pitch');
+        const layerGoal = document.getElementById('layer-goal');
+        const layerForeground = document.getElementById('layer-foreground');
+        const povKickingBoot = document.getElementById('pov-kicking-boot');
+        const goalFlashOverlay = document.getElementById('goal-flash-overlay');
+
+        // Drone Intro Elements
+        const droneOverlay = document.getElementById('drone-intro-overlay');
+        const droneSkyLayer = document.getElementById('drone-sky-layer');
+        const droneStadiumLayer = document.getElementById('drone-stadium-layer');
+        const droneTrussLayer = document.getElementById('drone-truss-pass-layer');
+        const droneBroadcastCard = document.getElementById('drone-broadcast-card');
+        const btnSkipIntro = document.getElementById('btn-skip-intro');
+
+        // Core Gameplay Elements
         const football = document.getElementById('football');
         const footballSpinner = document.getElementById('football-spinner');
         const ballShadow = document.getElementById('ball-shadow');
         const goalkeeper = document.getElementById('goalkeeper');
         const goalStage = document.getElementById('goal-stage');
         const goalNetGroup = document.getElementById('goal-net-group');
+        const zonesContainer = document.getElementById('zones-container');
+        const targetButtons = document.querySelectorAll('.target-btn');
         const scoreNewcastleEl = document.getElementById('val-score-newcastle');
         const scoreManUtdEl = document.getElementById('val-score-manutd');
         const streakEl = document.getElementById('val-streak');
-        const targetButtons = document.querySelectorAll('.target-btn');
         const bannerText = document.getElementById('banner-text');
 
         // Modal & Video Controls
@@ -1977,6 +2656,7 @@
 
         // Toolbar Controls
         const difficultySelect = document.getElementById('select-difficulty');
+        const btnReplayIntro = document.getElementById('btn-replay-intro');
         const btnToggleSound = document.getElementById('btn-toggle-sound');
         const soundIcon = document.getElementById('sound-icon');
         const btnToggleTheme = document.getElementById('btn-toggle-theme');
@@ -1984,7 +2664,7 @@
         const btnToggleFullscreen = document.getElementById('btn-toggle-fullscreen');
 
         /* ======================================================================
-           3. SYNTHESIZED WEB AUDIO API SOUND EFFECTS
+           3. SYNTHESIZED WEB AUDIO API SOUND ENGINE (ZERO EXTERNAL FILES)
            ====================================================================== */
         let audioCtx = null;
 
@@ -2001,22 +2681,179 @@
             return audioCtx;
         }
 
+        /** Synthesizes stadium aerial drone wind swoop + distant crowd swell */
+        function playSoundDroneIntro() {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx || ctx.state !== 'running') return;
+
+                const now = ctx.currentTime;
+                const duration = 3.8;
+                const bufferSize = Math.floor(ctx.sampleRate * duration);
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                // Wind / Drone Swoop Layer
+                const windSrc = ctx.createBufferSource();
+                windSrc.buffer = buffer;
+                const windFilter = ctx.createBiquadFilter();
+                windFilter.type = 'bandpass';
+                windFilter.Q.value = 2.6;
+                windFilter.frequency.setValueAtTime(220, now);
+                windFilter.frequency.exponentialRampToValueAtTime(980, now + 2.1);
+                windFilter.frequency.exponentialRampToValueAtTime(340, now + duration);
+
+                const windGain = ctx.createGain();
+                windGain.gain.setValueAtTime(0.001, now);
+                windGain.gain.linearRampToValueAtTime(0.11, now + 1.4);
+                windGain.gain.linearRampToValueAtTime(0.15, now + 2.2);
+                windGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                windSrc.connect(windFilter);
+                windFilter.connect(windGain);
+                windGain.connect(ctx.destination);
+                windSrc.start(now);
+                windSrc.stop(now + duration);
+
+                // Stadium Bowl Crowd Swell Layer
+                const crowdSrc = ctx.createBufferSource();
+                crowdSrc.buffer = buffer;
+                const crowdFilter = ctx.createBiquadFilter();
+                crowdFilter.type = 'lowpass';
+                crowdFilter.frequency.setValueAtTime(380, now);
+                crowdFilter.frequency.linearRampToValueAtTime(920, now + 2.5);
+                crowdFilter.frequency.linearRampToValueAtTime(540, now + duration);
+
+                const crowdGain = ctx.createGain();
+                crowdGain.gain.setValueAtTime(0.001, now);
+                crowdGain.gain.linearRampToValueAtTime(0.08, now + 2.3);
+                crowdGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                crowdSrc.connect(crowdFilter);
+                crowdFilter.connect(crowdGain);
+                crowdGain.connect(ctx.destination);
+                crowdSrc.start(now);
+                crowdSrc.stop(now + duration);
+            } catch (e) {}
+        }
+
+        /** Synthesizes crisp turf boot footsteps during the 4-stride run-up */
+        function playSoundFootstep(stepIndex) {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+
+                const now = ctx.currentTime;
+                const intensity = stepIndex === 3 ? 1.0 : 0.62 + stepIndex * 0.1;
+
+                // Low turf impact thud
+                const osc = ctx.createOscillator();
+                const oscGain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(stepIndex === 3 ? 96 : 78 + stepIndex * 5, now);
+                osc.frequency.exponentialRampToValueAtTime(28, now + 0.085);
+                oscGain.gain.setValueAtTime(0.32 * intensity, now);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+                osc.connect(oscGain);
+                oscGain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.095);
+
+                // Short grass-crunch filtered noise burst
+                const len = Math.floor(ctx.sampleRate * 0.065);
+                const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+                const ch = buf.getChannelData(0);
+                for (let i = 0; i < len; i++) {
+                    ch[i] = (Math.random() * 2 - 1) * (1 - i / len);
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buf;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 1150;
+                filter.Q.value = 1.2;
+                const nGain = ctx.createGain();
+                nGain.gain.setValueAtTime(0.18 * intensity, now);
+                nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+                noise.connect(filter);
+                filter.connect(nGain);
+                nGain.connect(ctx.destination);
+                noise.start(now);
+            } catch (e) {}
+        }
+
+        /** Synthesizes rising crowd anticipation swell during run-up */
+        function playSoundRunupSwell() {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+
+                const now = ctx.currentTime;
+                const dur = 0.9;
+                const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+                const ch = buf.getChannelData(0);
+                for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+
+                const src = ctx.createBufferSource();
+                src.buffer = buf;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(420, now);
+                filter.frequency.exponentialRampToValueAtTime(1050, now + dur);
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0.01, now);
+                gain.gain.linearRampToValueAtTime(0.095, now + dur * 0.85);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                src.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                src.start(now);
+            } catch (e) {}
+        }
+
         function playSoundKick() {
             if (!soundEnabled) return;
             try {
                 const ctx = getAudioContext();
                 if (!ctx) return;
+                const now = ctx.currentTime;
+
+                // Heavy leather impact punch
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(145, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.18);
-                gain.gain.setValueAtTime(1.0, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
+                osc.frequency.setValueAtTime(165, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.19);
+                gain.gain.setValueAtTime(1.0, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.19);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.19);
+                osc.start(now);
+                osc.stop(now + 0.2);
+
+                // Crisp boot-on-leather snap transient
+                const len = Math.floor(ctx.sampleRate * 0.05);
+                const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+                const ch = buf.getChannelData(0);
+                for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.3));
+                const snap = ctx.createBufferSource();
+                snap.buffer = buf;
+                const flt = ctx.createBiquadFilter();
+                flt.type = 'highpass';
+                flt.frequency.value = 900;
+                const sGain = ctx.createGain();
+                sGain.gain.setValueAtTime(0.32, now);
+                sGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                snap.connect(flt);
+                flt.connect(sGain);
+                sGain.connect(ctx.destination);
+                snap.start(now);
             } catch (e) {}
         }
 
@@ -2044,7 +2881,6 @@
             try {
                 const ctx = getAudioContext();
                 if (!ctx) return;
-                // Celebratory chord arpeggio
                 const notes = [261.63, 329.63, 392.00, 523.25];
                 notes.forEach((freq, idx) => {
                     const osc = ctx.createOscillator();
@@ -2060,8 +2896,7 @@
                     osc.stop(ctx.currentTime + idx * 0.08 + 0.7);
                 });
 
-                // Bandpass-filtered crowd roar noise burst
-                const bufferSize = ctx.sampleRate * 1.0;
+                const bufferSize = ctx.sampleRate * 1.1;
                 const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
                 const data = buffer.getChannelData(0);
                 for (let i = 0; i < bufferSize; i++) {
@@ -2073,8 +2908,8 @@
                 filter.type = 'bandpass';
                 filter.frequency.value = 850;
                 const noiseGain = ctx.createGain();
-                noiseGain.gain.setValueAtTime(0.2, ctx.currentTime);
-                noiseGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.0);
+                noiseGain.gain.setValueAtTime(0.22, ctx.currentTime);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.1);
                 noise.connect(filter);
                 filter.connect(noiseGain);
                 noiseGain.connect(ctx.destination);
@@ -2102,7 +2937,425 @@
         }
 
         /* ======================================================================
-           4. NON-REPEATING RANDOM HIGHLIGHT CLIP SELECTION
+           4. UNIFIED 3D POV CAMERA RIG & MULTI-LAYER PARALLAX ENGINE
+           ====================================================================== */
+        const camState = {
+            mode: 'intro',        // 'intro' | 'idle' | 'runup' | 'followthrough' | 'resetting'
+            // Smooth look-shift when hovering/focusing target zones
+            targetLookX: 0,
+            targetLookY: 0,
+            targetLookRoll: 0,
+            currLookX: 0,
+            currLookY: 0,
+            currLookRoll: 0,
+            // Run-up progress (0 = standing 4 strides back, 1 = right over the ball)
+            runupP: 0,
+            // Follow-through pan toward shot corner
+            followX: 0,
+            followY: 0,
+            followRoll: 0,
+            targetFollowX: 0,
+            targetFollowY: 0,
+            targetFollowRoll: 0,
+            // Impact recoil micro-shake
+            shakeStartTime: 0,
+            shakeDuration: 150,
+            // Current rig transform cache (for accurate ball trajectory calculation)
+            lastRigRollDeg: 0
+        };
+
+        /**
+         * Applies coordinated transforms to #pov-camera-rig and its 4 parallax depth layers
+         * so foreground turf/ball, goal/keeper, and distant Gallowgate stand separate in 3D space.
+         */
+        function applyParallaxTransforms({
+            rigX = 0,
+            rigY = 0,
+            rigScale = 1,
+            rigRoll = 0,
+            rigTiltX = 0,
+            runupP = 0
+        }) {
+            camState.lastRigRollDeg = rigRoll;
+
+            povCameraRig.style.transform =
+                `translate3d(${rigX.toFixed(2)}px, ${rigY.toFixed(2)}px, 0) ` +
+                `scale(${rigScale.toFixed(4)}) ` +
+                `rotate(${rigRoll.toFixed(3)}deg) ` +
+                `rotateX(${rigTiltX.toFixed(2)}deg)`;
+
+            // Multi-layer depth separation driven by run-up progress (0 -> 1)
+            const arenaH = arenaContainer.clientHeight || 600;
+            const farScale   = 1.00 + runupP * 0.11;
+            const farY       = -runupP * 6;
+            const pitchScale = 1.00 + runupP * 0.28;
+            const pitchY     = runupP * (arenaH * 0.055);
+            const goalScale  = 1.00 + runupP * 0.21;
+            const goalY      = runupP * (arenaH * 0.016);
+            // In standing-back POV stance (runupP = 0), ball sits slightly smaller & forward (0.86x),
+            // surging right up to the kicker's feet (1.24x) at contact!
+            const fgScale    = 0.86 + runupP * 0.38;
+            const fgY        = runupP * (arenaH * 0.105);
+
+            layerFar.style.transform        = `translate3d(0, ${farY.toFixed(2)}px, 0) scale(${farScale.toFixed(4)})`;
+            layerPitch.style.transform      = `translate3d(0, ${pitchY.toFixed(2)}px, 0) scale(${pitchScale.toFixed(4)})`;
+            layerGoal.style.transform       = `translate3d(0, ${goalY.toFixed(2)}px, 0) scale(${goalScale.toFixed(4)})`;
+            layerForeground.style.transform = `translate3d(0, ${fgY.toFixed(2)}px, 0) scale(${fgScale.toFixed(4)})`;
+        }
+
+        /* ======================================================================
+           5. FEATURE 1 — CINEMATIC AERIAL DRONE FLY-IN INTRO (4.0 SECONDS)
+           ====================================================================== */
+        let droneRafId = null;
+        let droneStartTime = 0;
+        const DRONE_TOTAL_MS = 4000;
+
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+        function easeOutQuint(t) {
+            return 1 - Math.pow(1 - t, 5);
+        }
+
+        function startDroneIntro() {
+            // Safely abort any ongoing kick sequence or open modal
+            kickSequenceId++;
+            if (droneRafId) cancelAnimationFrame(droneRafId);
+
+            resultModal.classList.add('hidden');
+            pitchNextKickBtn.classList.add('hidden');
+            try {
+                goalVideo.pause();
+                goalVideo.currentTime = 0;
+            } catch (e) {}
+
+            // Reset actors cleanly behind the scenes
+            resetActorsInstant();
+
+            isIntroPlaying = true;
+            isShooting = true;
+            camState.mode = 'intro';
+            camState.runupP = 0;
+            camState.targetLookX = camState.targetLookY = camState.targetLookRoll = 0;
+            camState.currLookX = camState.currLookY = camState.currLookRoll = 0;
+
+            // Show cinema letterbox bars, drone overlay, and skip button; hide HUD zones
+            arenaContainer.classList.remove('runup-cinema');
+            arenaContainer.classList.add('intro-cinema');
+            zonesContainer.classList.add('zones-hidden');
+            droneOverlay.classList.remove('hidden');
+            droneOverlay.style.opacity = '1';
+            btnSkipIntro.classList.remove('hidden');
+
+            bannerText.textContent = "ST. JAMES' PARK — AERIAL DRONE APPROACH TO THE GALLOWGATE END...";
+
+            playSoundDroneIntro();
+
+            droneStartTime = performance.now();
+            droneRafId = requestAnimationFrame(stepDroneIntro);
+        }
+
+        function stepDroneIntro(now) {
+            if (!isIntroPlaying) return;
+
+            const elapsed = now - droneStartTime;
+            const t = Math.min(1, elapsed / DRONE_TOTAL_MS);
+
+            // --- PHASE 1 (0.0s - 1.6s, t: 0 -> 0.40): High aerial approach over roof ---
+            // --- PHASE 2 (1.6s - 3.2s, t: 0.40 -> 0.80): Dive through roof into bowl ---
+            // --- PHASE 3 (3.2s - 4.0s, t: 0.80 -> 1.00): Glide & level into player POV ---
+
+            // 1. Broadcast Lower-Third Card entrance & fade
+            if (t < 0.08) {
+                const p = t / 0.08;
+                droneBroadcastCard.style.opacity = p.toFixed(3);
+                droneBroadcastCard.style.transform = `translate3d(${(-26 * (1 - p)).toFixed(1)}px, 0, 0)`;
+            } else if (t < 0.56) {
+                droneBroadcastCard.style.opacity = '1';
+                droneBroadcastCard.style.transform = 'translate3d(0, 0, 0)';
+            } else if (t < 0.70) {
+                const p = (t - 0.56) / 0.14;
+                droneBroadcastCard.style.opacity = (1 - p).toFixed(3);
+                droneBroadcastCard.style.transform = `translate3d(${(-20 * p).toFixed(1)}px, 0, 0)`;
+            } else {
+                droneBroadcastCard.style.opacity = '0';
+            }
+
+            // 2. Aerial Drone Overlay Multi-Layer Zoom & Bank
+            const aerialZoom = 1.0 + easeInOutCubic(Math.min(1, t / 0.72)) * 2.15;
+            const skyScale = 1.0 + Math.min(1, t / 0.72) * 0.28;
+            const bankDeg = Math.sin(t * Math.PI * 1.45) * -2.6;
+            const diveY = easeInOutCubic(Math.min(1, t / 0.72)) * -125;
+
+            droneSkyLayer.style.transform =
+                `translate3d(0, ${(diveY * 0.18).toFixed(1)}px, 0) scale(${skyScale.toFixed(4)}) rotate(${(bankDeg * 0.4).toFixed(2)}deg)`;
+            droneStadiumLayer.style.transform =
+                `translate3d(0, ${diveY.toFixed(1)}px, 0) scale(${aerialZoom.toFixed(4)}) rotate(${bankDeg.toFixed(2)}deg)`;
+
+            // Roof Truss Overhang rushes rapidly overhead during Phase 2 dive
+            const trussP = Math.max(0, Math.min(1, (t - 0.22) / 0.46));
+            const trussScale = 1.0 + Math.pow(trussP, 1.7) * 3.1;
+            const trussY = -Math.pow(trussP, 1.5) * 260;
+            droneTrussLayer.style.transform =
+                `translate3d(0, ${trussY.toFixed(1)}px, 0) scale(${trussScale.toFixed(4)}) rotate(${(bankDeg * 1.3).toFixed(2)}deg)`;
+            droneTrussLayer.style.opacity = (1 - Math.max(0, (trussP - 0.55) / 0.45)).toFixed(3);
+
+            // Smooth crossfade from aerial drone overlay into live 3D POV arena (t: 0.44 -> 0.72)
+            let overlayOpacity = 1;
+            if (t >= 0.44) {
+                overlayOpacity = 1 - easeInOutCubic(Math.min(1, (t - 0.44) / 0.28));
+            }
+            droneOverlay.style.opacity = Math.max(0, overlayOpacity).toFixed(3);
+
+            // 3. Live Arena Camera Swoop-In (Starts elevated/pulled back -> swoops smoothly down into eye-level POV)
+            const arenaT = Math.max(0, Math.min(1, (t - 0.36) / 0.64));
+            const swoopEase = easeOutQuint(arenaT);
+            const inv = 1 - swoopEase;
+
+            const arenaH = arenaContainer.clientHeight || 600;
+            const rigScale = 0.80 + swoopEase * 0.20;
+            const rigY = -inv * (arenaH * 0.11);
+            const rigX = Math.sin(arenaT * Math.PI) * 14 * inv;
+            const rigRoll = -inv * 3.2;
+            const rigTiltX = inv * 11.5;
+
+            applyParallaxTransforms({
+                rigX,
+                rigY,
+                rigScale,
+                rigRoll,
+                rigTiltX,
+                runupP: 0
+            });
+
+            // Begin retracting letterbox bars gracefully in Phase 3 (t >= 0.80)
+            if (t >= 0.80) {
+                arenaContainer.classList.remove('intro-cinema');
+            }
+
+            if (t < 1) {
+                droneRafId = requestAnimationFrame(stepDroneIntro);
+            } else {
+                finishDroneIntro();
+            }
+        }
+
+        function finishDroneIntro() {
+            if (droneRafId) {
+                cancelAnimationFrame(droneRafId);
+                droneRafId = null;
+            }
+            isIntroPlaying = false;
+            isShooting = false;
+            camState.mode = 'idle';
+
+            droneOverlay.classList.add('hidden');
+            btnSkipIntro.classList.add('hidden');
+            arenaContainer.classList.remove('intro-cinema');
+
+            // Settle exact standing-back POV stance
+            applyParallaxTransforms({ rigX: 0, rigY: 0, rigScale: 1, rigRoll: 0, rigTiltX: 0, runupP: 0 });
+
+            // Fade in 5 HUD target zones & enable input
+            zonesContainer.classList.remove('zones-hidden');
+            targetButtons.forEach(btn => {
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+                btn.classList.remove('target-locked');
+            });
+
+            bannerText.textContent = "ST. JAMES' PARK — TAP ANY ZONE ON THE GOAL TO SHOOT!";
+        }
+
+        /* ======================================================================
+           6. FEATURE 2 — CONTINUOUS POV BREATHING, LOOK-SHIFT & CAMERA LOOP
+           ====================================================================== */
+        const ZONE_LOOK_OFFSETS = {
+            TL: { x:  13, y:   9, roll: -0.65 },
+            TR: { x: -13, y:   9, roll:  0.65 },
+            C:  { x:   0, y:   5, roll:  0.00 },
+            BL: { x:  13, y:  -5, roll: -0.45 },
+            BR: { x: -13, y:  -5, roll:  0.45 }
+        };
+
+        const ZONE_FOLLOW_OFFSETS = {
+            TL: { x:  22, y:  14, roll: -1.1 },
+            TR: { x: -22, y:  14, roll:  1.1 },
+            C:  { x:   0, y:   9, roll:  0.0 },
+            BL: { x:  20, y:  -4, roll: -0.8 },
+            BR: { x: -20, y:  -4, roll:  0.8 }
+        };
+
+        function setLookShift(zone) {
+            if (isIntroPlaying || isShooting || !zone) {
+                camState.targetLookX = 0;
+                camState.targetLookY = 0;
+                camState.targetLookRoll = 0;
+                return;
+            }
+            const o = ZONE_LOOK_OFFSETS[zone];
+            if (o) {
+                camState.targetLookX = o.x;
+                camState.targetLookY = o.y;
+                camState.targetLookRoll = o.roll;
+            }
+        }
+
+        function masterCameraLoop(now) {
+            const sec = now * 0.001;
+
+            if (camState.mode === 'idle') {
+                // Smooth exponential interpolation toward hovered target zone
+                camState.currLookX    += (camState.targetLookX    - camState.currLookX)    * 0.10;
+                camState.currLookY    += (camState.targetLookY    - camState.currLookY)    * 0.10;
+                camState.currLookRoll += (camState.targetLookRoll - camState.currLookRoll) * 0.10;
+
+                // Subtle, alive first-person breathing & natural eye-sway
+                const breathY  = Math.sin(sec * 1.65) * 2.4;
+                const driftX   = Math.sin(sec * 0.72) * 2.8;
+                const swayRoll = Math.sin(sec * 0.68) * 0.24;
+
+                applyParallaxTransforms({
+                    rigX: camState.currLookX + driftX,
+                    rigY: camState.currLookY + breathY,
+                    rigScale: 1.0,
+                    rigRoll: camState.currLookRoll + swayRoll,
+                    rigTiltX: 0,
+                    runupP: 0
+                });
+            } else if (camState.mode === 'followthrough') {
+                // Smooth directional tracking pan + damped impact micro-shake
+                camState.followX    += (camState.targetFollowX    - camState.followX)    * 0.11;
+                camState.followY    += (camState.targetFollowY    - camState.followY)    * 0.11;
+                camState.followRoll += (camState.targetFollowRoll - camState.followRoll) * 0.11;
+
+                let shakeX = 0;
+                let shakeY = 0;
+                let shakeScale = 0;
+                const shakeElapsed = now - camState.shakeStartTime;
+                if (shakeElapsed >= 0 && shakeElapsed < camState.shakeDuration) {
+                    const decay = 1 - shakeElapsed / camState.shakeDuration;
+                    shakeX = Math.sin(shakeElapsed * 0.22) * 7.5 * decay;
+                    shakeY = -Math.cos(shakeElapsed * 0.26) * 8.5 * decay;
+                    shakeScale = 0.022 * decay;
+                }
+
+                applyParallaxTransforms({
+                    rigX: camState.followX + shakeX,
+                    rigY: camState.followY + shakeY,
+                    rigScale: 1.0 + shakeScale,
+                    rigRoll: camState.followRoll,
+                    rigTiltX: 0,
+                    runupP: 1.0
+                });
+            } else if (camState.mode === 'resetting') {
+                // Smoothly glide camera back behind the penalty spot
+                camState.runupP += (0 - camState.runupP) * 0.16;
+                camState.followX *= 0.82;
+                camState.followY *= 0.82;
+                camState.followRoll *= 0.82;
+
+                applyParallaxTransforms({
+                    rigX: camState.followX,
+                    rigY: camState.followY,
+                    rigScale: 1.0,
+                    rigRoll: camState.followRoll,
+                    rigTiltX: 0,
+                    runupP: camState.runupP
+                });
+
+                if (camState.runupP < 0.004) {
+                    camState.runupP = 0;
+                    camState.followX = camState.followY = camState.followRoll = 0;
+                    camState.mode = 'idle';
+                }
+            }
+
+            requestAnimationFrame(masterCameraLoop);
+        }
+
+        /* ======================================================================
+           7. TURF SPRAY PARTICLE EFFECT ON BOOT IMPACT
+           ====================================================================== */
+        const turfCanvas = document.getElementById('turf-spray-canvas');
+        const tCtx = turfCanvas.getContext('2d');
+        let turfParticles = [];
+        let turfRafId = null;
+
+        function resizeTurfCanvas() {
+            const rect = layerForeground.getBoundingClientRect();
+            turfCanvas.width = Math.max(1, Math.round(rect.width));
+            turfCanvas.height = Math.max(1, Math.round(rect.height));
+        }
+
+        function fireTurfSpray() {
+            resizeTurfCanvas();
+            const originX = turfCanvas.width * 0.5;
+            const originY = turfCanvas.height * 0.775;
+            const colors = ['#15803d', '#22c55e', '#4ade80', '#ffffff', '#e2e8f0'];
+
+            turfParticles = [];
+            for (let i = 0; i < 26; i++) {
+                const isChalk = i % 4 === 0;
+                turfParticles.push({
+                    x: originX + (Math.random() - 0.5) * 26,
+                    y: originY + (Math.random() - 0.5) * 8,
+                    vx: (Math.random() - 0.52) * 10,
+                    vy: -(Math.random() * 7.5 + 3.5),
+                    size: isChalk ? Math.random() * 4 + 2.5 : Math.random() * 5.5 + 3,
+                    rot: Math.random() * Math.PI,
+                    vRot: (Math.random() - 0.5) * 0.35,
+                    color: isChalk ? '#ffffff' : colors[Math.floor(Math.random() * 3)],
+                    alpha: 1,
+                    isBlade: !isChalk
+                });
+            }
+
+            if (turfRafId) cancelAnimationFrame(turfRafId);
+            renderTurfSpray();
+        }
+
+        function renderTurfSpray() {
+            tCtx.clearRect(0, 0, turfCanvas.width, turfCanvas.height);
+            let alive = 0;
+
+            for (let i = 0; i < turfParticles.length; i++) {
+                const p = turfParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.36;
+                p.vx *= 0.96;
+                p.rot += p.vRot;
+                p.alpha -= 0.028;
+
+                if (p.alpha > 0.02) {
+                    alive++;
+                    tCtx.save();
+                    tCtx.globalAlpha = Math.max(0, p.alpha);
+                    tCtx.translate(p.x, p.y);
+                    tCtx.rotate(p.rot);
+                    tCtx.fillStyle = p.color;
+                    if (p.isBlade) {
+                        tCtx.fillRect(-p.size, -1.6, p.size * 2, 3.2);
+                    } else {
+                        tCtx.beginPath();
+                        tCtx.arc(0, 0, p.size * 0.55, 0, Math.PI * 2);
+                        tCtx.fill();
+                    }
+                    tCtx.restore();
+                }
+            }
+
+            if (alive > 0) {
+                turfRafId = requestAnimationFrame(renderTurfSpray);
+            } else {
+                tCtx.clearRect(0, 0, turfCanvas.width, turfCanvas.height);
+                turfRafId = null;
+            }
+        }
+
+        /* ======================================================================
+           8. NON-REPEATING RANDOM HIGHLIGHT CLIP SELECTION & DIFFICULTY LOGIC
            ====================================================================== */
         function getRandomHighlightClip() {
             let availableIndices = [];
@@ -2119,9 +3372,6 @@
             return HIGHLIGHT_CLIPS[pickedIndex];
         }
 
-        /* ======================================================================
-           5. DIFFICULTY PROBABILITIES & PENALTY KICK PHYSICS
-           ====================================================================== */
         function determineGoalieSave(difficulty) {
             const roll = Math.random();
             // Easy: 85% goals (15% save chance)
@@ -2132,96 +3382,249 @@
             return roll < 0.55;
         }
 
+        /* ======================================================================
+           9. FEATURE 3 — DYNAMIC 4-STRIDE POV RUN-UP, BOOT STRIKE & BALL LAUNCH
+           ====================================================================== */
         function executePenaltyKick(targetZone, clickedBtn) {
-            if (isShooting) return;
+            if (isShooting || isIntroPlaying) return;
             isShooting = true;
+            const mySeqId = ++kickSequenceId;
             getAudioContext();
 
-            // Disable target zones while shot is in flight
+            // 1. Target Lock Flash & Slim Cinema Letterbox Bars
+            clickedBtn.classList.add('target-locked');
             targetButtons.forEach(btn => {
                 btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.28';
+                if (btn !== clickedBtn) {
+                    btn.style.opacity = '0.16';
+                }
             });
 
-            playSoundKick();
+            arenaContainer.classList.add('runup-cinema');
+            bannerText.textContent = "STEADYING THE BREATH... HERE COMES THE RUN-UP!";
+            playSoundRunupSwell();
 
+            // Fade out all target zones after brief target lock beat so POV is 100% clear
+            setTimeout(() => {
+                if (mySeqId !== kickSequenceId) return;
+                zonesContainer.classList.add('zones-hidden');
+                clickedBtn.classList.remove('target-locked');
+            }, 160);
+
+            // 2. Start 4-Stride Animated First-Person Run-Up (850ms via RAF)
+            camState.mode = 'runup';
+            const RUNUP_DURATION_MS = 850;
+            const runupStart = performance.now();
+            const stepTriggered = [false, false, false, false];
+            const stepThresholds = [0.22, 0.45, 0.68, 0.89];
+
+            function stepRunup(now) {
+                if (mySeqId !== kickSequenceId) return;
+
+                const elapsed = now - runupStart;
+                const rawP = Math.min(1, elapsed / RUNUP_DURATION_MS);
+
+                // Smooth athletic sprint acceleration curve
+                const surgeP = 0.35 * rawP + 0.65 * Math.pow(rawP, 1.38);
+                camState.runupP = surgeP;
+
+                // Trigger 4 crisp turf footsteps synced to stride impacts
+                for (let s = 0; s < 4; s++) {
+                    if (!stepTriggered[s] && rawP >= stepThresholds[s]) {
+                        stepTriggered[s] = true;
+                        playSoundFootstep(s);
+                    }
+                }
+
+                // Realistic 4-stride head-bob & left-right stride lean
+                const stridePhase = rawP * 4 * Math.PI;
+                let bobY = -Math.abs(Math.sin(stridePhase)) * (10 + rawP * 6);
+                let swayX = Math.sin(stridePhase) * 8.5;
+                let rollDeg = Math.sin(stridePhase) * 1.65;
+
+                // Strong plant-foot dip & counter-lean opposite kicking foot right before strike
+                if (rawP > 0.84) {
+                    const plantT = (rawP - 0.84) / 0.16;
+                    bobY += Math.sin(plantT * Math.PI * 0.85) * 14;
+                    rollDeg -= plantT * 2.1;
+                    swayX -= plantT * 7;
+                }
+
+                applyParallaxTransforms({
+                    rigX: swayX,
+                    rigY: bobY,
+                    rigScale: 1.0,
+                    rigRoll: rollDeg,
+                    rigTiltX: rawP * 2.2,
+                    runupP: surgeP
+                });
+
+                // Animate First-Person Kicking Boot swinging from bottom-right to impact!
+                if (rawP >= 0.82) {
+                    const swingT = (rawP - 0.82) / 0.18; // 0 -> 1 right at contact
+                    const easeSwing = Math.pow(swingT, 1.4);
+                    const bootX = 128 - easeSwing * 116;   // 128px -> 12px (right behind ball)
+                    const bootY = 225 - easeSwing * 204;   // 225px -> 21px
+                    const bootRot = 30 - easeSwing * 44;   // +30deg -> -14deg strike whip
+                    const bootScale = 0.94 + easeSwing * 0.22;
+                    povKickingBoot.style.opacity = Math.min(1, swingT * 2.6).toFixed(3);
+                    povKickingBoot.style.transform =
+                        `translate3d(${bootX.toFixed(1)}px, ${bootY.toFixed(1)}px, 0) rotate(${bootRot.toFixed(1)}deg) scale(${bootScale.toFixed(3)})`;
+                }
+
+                if (rawP < 1) {
+                    requestAnimationFrame(stepRunup);
+                } else {
+                    executeBootStrikeAndLaunch(targetZone, clickedBtn, mySeqId);
+                }
+            }
+
+            requestAnimationFrame(stepRunup);
+        }
+
+        /**
+         * Executes exact impact contact, boot follow-through, turf spray, camera punch,
+         * and mathematically exact perspective-compensated ball & keeper launch.
+         */
+        function executeBootStrikeAndLaunch(targetZone, clickedBtn, mySeqId) {
+            if (mySeqId !== kickSequenceId) return;
+
+            // Lock clean neutral frame at p=1.0 for exact screen-to-local trajectory measurement
+            applyParallaxTransforms({
+                rigX: 0,
+                rigY: 0,
+                rigScale: 1.0,
+                rigRoll: 0,
+                rigTiltX: 0,
+                runupP: 1.0
+            });
+
+            // 1. Measure exact screen-space centers & real-time scale factors
+            const ballRect = football.getBoundingClientRect();
+            const targetRect = clickedBtn.getBoundingClientRect();
+            const goalStageRect = goalStage.getBoundingClientRect();
+            const shadowRect = ballShadow.getBoundingClientRect();
+            const goalieRect = goalkeeper.getBoundingClientRect();
+
+            const ballScaleX = ballRect.width / (football.offsetWidth || 74);
+            const ballScaleY = ballRect.height / (football.offsetHeight || 74);
+            const goalieScaleX = goalieRect.width / (goalkeeper.offsetWidth || 150);
+            const goalieScaleY = goalieRect.height / (goalkeeper.offsetHeight || 180);
+
+            const ballCenterX = ballRect.left + ballRect.width / 2;
+            const ballCenterY = ballRect.top + ballRect.height / 2;
+            const targetCenterX = targetRect.left + targetRect.width / 2;
+            const targetCenterY = targetRect.top + targetRect.height / 2;
+
+            // Divide screen delta by #layer-foreground's active scale -> guaranteed dead-center accuracy!
+            const localBallDx = (targetCenterX - ballCenterX) / ballScaleX;
+            const localBallDy = (targetCenterY - ballCenterY) / ballScaleY;
+
+            const shadowTargetY = goalStageRect.bottom - 18 * goalieScaleY;
+            const localShadowDy = (shadowTargetY - (shadowRect.top + shadowRect.height / 2)) / ballScaleY;
+
+            // 2. Impact Audio, Turf Spray, Boot Follow-Through & Camera Punch
+            playSoundKick();
+            fireTurfSpray();
+
+            // Animate boot sweeping through impact and exiting upper-left cleanly
+            const followStart = performance.now();
+            const FOLLOW_BOOT_MS = 270;
+            function stepBootFollowThrough(now) {
+                if (mySeqId !== kickSequenceId) return;
+                const ft = Math.min(1, (now - followStart) / FOLLOW_BOOT_MS);
+                const easeOut = 1 - Math.pow(1 - ft, 3);
+                const bx = 12 - easeOut * 105;
+                const by = 21 - easeOut * 72;
+                const brot = -14 - easeOut * 30;
+                const bscale = 1.16 + easeOut * 0.10;
+                const bOp = ft < 0.35 ? 1 : Math.max(0, 1 - (ft - 0.35) / 0.65);
+
+                povKickingBoot.style.opacity = bOp.toFixed(3);
+                povKickingBoot.style.transform =
+                    `translate3d(${bx.toFixed(1)}px, ${by.toFixed(1)}px, 0) rotate(${brot.toFixed(1)}deg) scale(${bscale.toFixed(3)})`;
+
+                if (ft < 1) {
+                    requestAnimationFrame(stepBootFollowThrough);
+                } else {
+                    povKickingBoot.style.opacity = '0';
+                }
+            }
+            requestAnimationFrame(stepBootFollowThrough);
+
+            // Activate Follow-Through Camera Mode with Impact Recoil Shake
+            const fOff = ZONE_FOLLOW_OFFSETS[targetZone] || { x: 0, y: 8, roll: 0 };
+            camState.followX = 0;
+            camState.followY = 0;
+            camState.followRoll = 0;
+            camState.targetFollowX = fOff.x;
+            camState.targetFollowY = fOff.y;
+            camState.targetFollowRoll = fOff.roll;
+            camState.shakeStartTime = performance.now();
+            camState.mode = 'followthrough';
+
+            // 3. Determine Goal vs Save using exact preserved difficulty probabilities
             const difficulty = difficultySelect.value;
             const isSave = determineGoalieSave(difficulty);
             const isGoal = !isSave;
 
-            // Compute exact dynamic trajectory from football center to target center
-            const ballRect = football.getBoundingClientRect();
-            const targetRect = clickedBtn.getBoundingClientRect();
-
-            const ballCenterX = ballRect.left + ballRect.width / 2;
-            const ballCenterY = ballRect.top + ballRect.height / 2;
-
-            const targetCenterX = targetRect.left + targetRect.width / 2;
-            const targetCenterY = targetRect.top + targetRect.height / 2;
-
-            const deltaX = targetCenterX - ballCenterX;
-            const deltaY = targetCenterY - ballCenterY;
-
-            // Animate football: translate, scale(0.48), and 720deg spin over 520ms
+            // 4. Launch Spinning Football & Ground Shadow (520ms flight)
             footballSpinner.classList.add('spinning-ball');
-            football.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(0.48)`;
+            football.style.transform = `translate3d(${localBallDx.toFixed(1)}px, ${localBallDy.toFixed(1)}px, 0) scale(0.36)`;
 
-            // Animate dynamic turf shadow toward the goal line
-            const goalStageRect = goalStage.getBoundingClientRect();
-            const shadowRect = ballShadow.getBoundingClientRect();
-            const shadowDeltaY = (goalStageRect.bottom - 20) - (shadowRect.top + shadowRect.height / 2);
-            ballShadow.style.transform = `translate3d(${deltaX}px, ${shadowDeltaY}px, 0) scale(0.35)`;
+            ballShadow.style.transform = `translate3d(${localBallDx.toFixed(1)}px, ${localShadowDy.toFixed(1)}px, 0) scale(0.28)`;
             ballShadow.style.opacity = '0.2';
 
-            // Goalkeeper diving animation
+            // 5. Goalkeeper Diving Animation (Scale-Compensated)
             goalkeeper.classList.add('goalkeeper-diving');
-            const goalieRect = goalkeeper.getBoundingClientRect();
             const goalieCenterX = goalieRect.left + goalieRect.width / 2;
             const goalieCenterY = goalieRect.top + goalieRect.height * 0.45;
 
             if (isSave) {
-                // Dive accurately to intercept shot
-                const gDeltaX = (targetCenterX - goalieCenterX) * 0.86;
-                const gDeltaY = Math.max(-55, (targetCenterY - goalieCenterY) * 0.72);
+                const gDeltaX = ((targetCenterX - goalieCenterX) / goalieScaleX) * 0.86;
+                const gDeltaY = Math.max(-55, ((targetCenterY - goalieCenterY) / goalieScaleY) * 0.72);
                 let rot = 0;
                 if (targetZone === 'TL' || targetZone === 'BL') rot = -44;
                 if (targetZone === 'TR' || targetZone === 'BR') rot = 44;
-
-                goalkeeper.style.transform = `translate3d(${gDeltaX}px, ${gDeltaY}px, 0) rotate(${rot}deg)`;
+                goalkeeper.style.transform = `translate3d(${gDeltaX.toFixed(1)}px, ${gDeltaY.toFixed(1)}px, 0) rotate(${rot}deg)`;
             } else {
-                // Dive to a random wrong zone
                 const allZones = ['TL', 'TR', 'C', 'BL', 'BR'];
                 const wrongZones = allZones.filter(z => z !== targetZone);
                 const diveZone = wrongZones[Math.floor(Math.random() * wrongZones.length)];
                 const diveTargetBtn = document.querySelector(`[data-zone="${diveZone}"]`);
                 const diveRect = diveTargetBtn.getBoundingClientRect();
 
-                const dDeltaX = ((diveRect.left + diveRect.width / 2) - goalieCenterX) * 0.82;
-                const dDeltaY = Math.max(-45, ((diveRect.top + diveRect.height / 2) - goalieCenterY) * 0.65);
+                const dDeltaX = (((diveRect.left + diveRect.width / 2) - goalieCenterX) / goalieScaleX) * 0.82;
+                const dDeltaY = Math.max(-45, (((diveRect.top + diveRect.height / 2) - goalieCenterY) / goalieScaleY) * 0.65);
                 let wrongRot = 0;
                 if (diveZone === 'TL' || diveZone === 'BL') wrongRot = -46;
                 if (diveZone === 'TR' || diveZone === 'BR') wrongRot = 46;
-
-                goalkeeper.style.transform = `translate3d(${dDeltaX}px, ${dDeltaY}px, 0) rotate(${wrongRot}deg)`;
+                goalkeeper.style.transform = `translate3d(${dDeltaX.toFixed(1)}px, ${dDeltaY.toFixed(1)}px, 0) rotate(${wrongRot}deg)`;
             }
 
-            // Trigger net ripple impact just as ball hits the back of the net
+            // 6. Trigger Net Ripple & Floodlight Flash as ball hits the back of the net
             if (isGoal) {
                 setTimeout(() => {
+                    if (mySeqId !== kickSequenceId) return;
                     goalNetGroup.classList.remove('net-rippling');
                     void goalNetGroup.offsetWidth;
                     goalNetGroup.classList.add('net-rippling');
+
+                    goalFlashOverlay.classList.remove('goal-flashing');
+                    void goalFlashOverlay.offsetWidth;
+                    goalFlashOverlay.classList.add('goal-flashing');
                 }, 430);
             }
 
-            // Conclude shot after 520ms flight time
+            // 7. Conclude Shot After 520ms Flight Time (With Dramatic Beat Before Highlight Modal)
             setTimeout(() => {
+                if (mySeqId !== kickSequenceId) return;
                 footballSpinner.classList.remove('spinning-ball');
-                concludePenaltyKick(isGoal);
+                concludePenaltyKick(isGoal, mySeqId);
             }, 520);
         }
 
-        function concludePenaltyKick(isGoal) {
+        function concludePenaltyKick(isGoal, mySeqId) {
             if (isGoal) {
                 scoreNewcastle++;
                 streak++;
@@ -2242,12 +3645,16 @@
                 modalClipBadge.textContent = `Highlight: ${pickedClip.file}`;
                 videoFrame.classList.remove('frame-save');
 
-                // Populate fallback card for missing clip or blocked autoplay
                 fallbackHighlightTitle.textContent = pickedClip.title;
                 fallbackHighlightDesc.textContent = pickedClip.desc;
                 fallbackTipFile.innerHTML = `Place "<code>${pickedClip.file}</code>" in your GitHub repository next to index.html`;
 
-                openResultModal(true, pickedClip.file);
+                // Dramatic 550ms beat so player witnesses ball hitting net + confetti eruption!
+                setTimeout(() => {
+                    if (mySeqId !== kickSequenceId) return;
+                    pitchNextKickBtn.classList.remove('hidden');
+                    openResultModal(true, pickedClip.file);
+                }, 550);
             } else {
                 scoreManUtd++;
                 streak = 0;
@@ -2265,10 +3672,12 @@
                 modalClipBadge.textContent = "Great save by the Man Utd #1";
                 videoFrame.classList.add('frame-save');
 
-                openResultModal(false, null);
+                setTimeout(() => {
+                    if (mySeqId !== kickSequenceId) return;
+                    pitchNextKickBtn.classList.remove('hidden');
+                    openResultModal(false, null);
+                }, 440);
             }
-
-            pitchNextKickBtn.classList.remove('hidden');
         }
 
         function openResultModal(hasGoal, clipFilename) {
@@ -2299,16 +3708,7 @@
             }
         }
 
-        function resetForNextPenalty() {
-            resultModal.classList.add('hidden');
-            pitchNextKickBtn.classList.add('hidden');
-
-            try {
-                goalVideo.pause();
-                goalVideo.currentTime = 0;
-            } catch (e) {}
-
-            // Reset ball, ground shadow, goalkeeper, net, and target zones
+        function resetActorsInstant() {
             football.style.transform = 'translate3d(0, 0, 0) scale(1)';
             footballSpinner.classList.remove('spinning-ball');
             footballSpinner.style.transform = 'rotate(0deg)';
@@ -2319,10 +3719,35 @@
             goalkeeper.classList.remove('goalkeeper-diving');
             goalkeeper.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
             goalNetGroup.classList.remove('net-rippling');
+            goalFlashOverlay.classList.remove('goal-flashing');
 
+            povKickingBoot.style.opacity = '0';
+            povKickingBoot.style.transform = 'translate3d(130px, 240px, 0) rotate(32deg) scale(0.95)';
+            tCtx.clearRect(0, 0, turfCanvas.width, turfCanvas.height);
+        }
+
+        function resetForNextPenalty() {
+            kickSequenceId++;
+            resultModal.classList.add('hidden');
+            pitchNextKickBtn.classList.add('hidden');
+            arenaContainer.classList.remove('runup-cinema');
+
+            try {
+                goalVideo.pause();
+                goalVideo.currentTime = 0;
+            } catch (e) {}
+
+            resetActorsInstant();
+
+            // Smoothly glide POV camera back behind the penalty spot
+            camState.targetLookX = camState.targetLookY = camState.targetLookRoll = 0;
+            camState.mode = 'resetting';
+
+            zonesContainer.classList.remove('zones-hidden');
             targetButtons.forEach(btn => {
                 btn.style.pointerEvents = 'auto';
                 btn.style.opacity = '1';
+                btn.classList.remove('target-locked');
             });
 
             bannerText.textContent = "ST. JAMES' PARK — TAP ANY ZONE ON THE GOAL TO SHOOT!";
@@ -2330,7 +3755,7 @@
         }
 
         /* ======================================================================
-           6. EVENT LISTENERS (CLICK, TOUCH, KEYBOARD, VIDEO & TOOLBAR)
+           10. EVENT LISTENERS (CLICK, TOUCH, HOVER LOOK-SHIFT, KEYBOARD, TOOLBAR)
            ====================================================================== */
         modalNextKickBtn.addEventListener('click', resetForNextPenalty);
         pitchNextKickBtn.addEventListener('click', resetForNextPenalty);
@@ -2340,9 +3765,26 @@
             videoFallback.classList.remove('hidden');
         });
 
-        // Target Zones: Click and Touchstart Support
+        // Skip Intro & Replay Intro Buttons
+        btnSkipIntro.addEventListener('click', (e) => {
+            e.preventDefault();
+            getAudioContext();
+            finishDroneIntro();
+        });
+
+        btnReplayIntro.addEventListener('click', () => {
+            getAudioContext();
+            startDroneIntro();
+        });
+
+        // Target Zones: Click, Touchstart & Dynamic First-Person Look-Shift
         targetButtons.forEach(btn => {
             const zone = btn.getAttribute('data-zone');
+
+            btn.addEventListener('mouseenter', () => setLookShift(zone));
+            btn.addEventListener('focus', () => setLookShift(zone));
+            btn.addEventListener('mouseleave', () => setLookShift(null));
+            btn.addEventListener('blur', () => setLookShift(null));
 
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -2355,9 +3797,18 @@
             }, { passive: false });
         });
 
-        // Keyboard Support: Keys 1-5 to shoot; Enter / Space for Next Kick
+        // Keyboard Support: Space/Enter skips intro or triggers Next Kick; Keys 1-5 shoot
         document.addEventListener('keydown', (e) => {
             if (e.target && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT')) return;
+
+            if (isIntroPlaying) {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    getAudioContext();
+                    finishDroneIntro();
+                }
+                return;
+            }
 
             if (!resultModal.classList.contains('hidden')) {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -2415,19 +3866,20 @@
         });
 
         /* ======================================================================
-           7. FULL-VIEWPORT CONFETTI CELEBRATION ENGINE
+           11. FULL-VIEWPORT CONFETTI CELEBRATION ENGINE
            ====================================================================== */
         const confettiCanvas = document.getElementById('confetti-canvas');
         const cCtx = confettiCanvas.getContext('2d');
         let confettiParticles = [];
         let confettiAnimationId = null;
 
-        function resizeConfetti() {
+        function resizeCanvases() {
             confettiCanvas.width = window.innerWidth;
             confettiCanvas.height = window.innerHeight;
+            resizeTurfCanvas();
         }
-        window.addEventListener('resize', resizeConfetti);
-        resizeConfetti();
+        window.addEventListener('resize', resizeCanvases);
+        resizeCanvases();
 
         function fireConfettiCelebration() {
             confettiParticles = [];
@@ -2477,6 +3929,15 @@
                 cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
             }
         }
+
+        /* ======================================================================
+           12. BOOTSTRAP ON WINDOW LOAD (STARTS CAMERA LOOP + DRONE FLY-IN)
+           ====================================================================== */
+        window.onload = function () {
+            resizeCanvases();
+            requestAnimationFrame(masterCameraLoop);
+            startDroneIntro();
+        };
     </script>
 </body>
 </html>
